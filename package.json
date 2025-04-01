@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "pino-pretty": "^8.0.0"
     "@zoralabs/coins-sdk":"latest",
     "next": "^14.0.0",
     "react": "^18.2.0",

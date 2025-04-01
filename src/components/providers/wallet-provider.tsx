@@ -25,9 +25,6 @@ const config = createConfig(
     // WalletConnectのProjectIDを設定
     walletConnectProjectId: walletConnectId,
 
-    // 必要ならAlchemyIdも設定
-    alchemyId: process.env.NEXT_PUBLIC_ALCHEMY_API_KEY,
-
     // RPC設定: base.id のトランスポートを http(baseRpcUrl) に設定
     transports: {
       [base.id]: http(baseRpcUrl),

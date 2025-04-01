@@ -99,18 +99,18 @@ export default function CreatePage() {
             あなたのコインは正常に作成され、取引可能になりました。
           </p>
           
-          {result.coinAddress && (
+          {result.address && (
             <div className="mb-4">
               <p className="font-medium">コインアドレス:</p>
               <code className="block p-3 bg-gray-100 dark:bg-gray-800 rounded overflow-x-auto">
-                {result.coinAddress}
+                {result.address}
               </code>
             </div>
           )}
           
           <div className="flex gap-4 mt-6">
             <Link
-              href={`https://zora.co/base/coins/${result.Address}`}
+              href={`https://zora.co/base/coins/${result.address}`}
               target="_blank"
               rel="noopener noreferrer"
               className="btn-primary px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white"

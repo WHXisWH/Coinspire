@@ -3,6 +3,7 @@
 import { WagmiConfig, createConfig } from 'wagmi';
 import { base } from 'wagmi/chains';
 import { ConnectKitProvider, getDefaultConfig } from 'connectkit';
+import { http } from 'viem/transport/http'; // 追加: httpトランスポートをインポート
 
 // WalletConnect ProjectIdが環境変数にある場合は使用
 const walletConnectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_ID || '';
@@ -14,7 +15,7 @@ const baseRpcUrl = process.env.NEXT_PUBLIC_BASE_RPC_URL || 'https://mainnet.base
 const config = createConfig(
   getDefaultConfig({
     // App情報
-    appName: 'Coinspire', 
+    appName: 'Coinspire', // "TrendCoin" から変更
     appDescription: 'トレンド分析と創作支援プラットフォーム',
     appUrl: 'https://coinspire.app',
 
@@ -27,9 +28,9 @@ const config = createConfig(
     // 必要ならAlchemyIdも設定
     alchemyId: process.env.NEXT_PUBLIC_ALCHEMY_API_KEY,
 
-
+    // RPC設定: base.id のトランスポートを http(baseRpcUrl) に変更
     transports: {
-      [base.id]: baseRpcUrl,
+      [base.id]: http(baseRpcUrl),
     },
   })
 );

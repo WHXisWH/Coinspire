@@ -110,7 +110,7 @@ export default function CreatePage() {
           
           <div className="flex gap-4 mt-6">
             <Link
-              href={`https://zora.co/base/coins/${result.coinAddress}`}
+              href={`https://zora.co/base/coins/${result.Address}`}
               target="_blank"
               rel="noopener noreferrer"
               className="btn-primary px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white"

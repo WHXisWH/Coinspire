@@ -1,7 +1,7 @@
 'use client';
 
 import { WagmiConfig, createConfig } from 'wagmi';
-import { baseMainnet } from 'wagmi/chains';
+import { Mainnet } from 'wagmi/chains';
 import { ConnectKitProvider, getDefaultConfig } from 'connectkit';
 
 // WalletConnect ProjectIdが環境変数にある場合は使用

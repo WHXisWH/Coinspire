@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useAccount } from 'wagmi';
 import { CreationForm } from '@/components/create/creation-form';
 import { TemplateGallery } from '@/components/create/template-gallery';
@@ -108,14 +109,14 @@ export default function CreatePage() {
           )}
           
           <div className="flex gap-4 mt-6">
-            
+            <Link
               href={`https://zora.co/base/coins/${result.coinAddress}`}
               target="_blank"
               rel="noopener noreferrer"
               className="btn-primary px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white"
             >
               Zoraで見る
-            </a>
+            </Link>
             
             <button
               onClick={() => setStep('template')}

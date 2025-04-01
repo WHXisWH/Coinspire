@@ -182,7 +182,7 @@ export function CreationForm({
         
         <div className="flex gap-4 mt-6">
           {mintResult?.address && (
-            
+            <a
               href={`https://zora.co/base/coins/${mintResult.address}`}
               target="_blank"
               rel="noopener noreferrer"

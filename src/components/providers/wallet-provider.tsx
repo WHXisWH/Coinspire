@@ -1,7 +1,7 @@
 'use client';
 
 import { WagmiConfig, createConfig } from 'wagmi';
-import { Mainnet } from 'wagmi/chains';
+import { mainnet } from 'wagmi/chains';
 import { ConnectKitProvider, getDefaultConfig } from 'connectkit';
 
 // WalletConnect ProjectIdが環境変数にある場合は使用
@@ -19,7 +19,7 @@ const config = createConfig(
     appUrl: 'https://coinspire.app',
     
     // 必要なチェーンを指定
-    chains: [baseMainnet],
+    chains: [mainnet],
     
     // WalletConnectのProjectIDを設定
     walletConnectProjectId: walletConnectId,
@@ -29,7 +29,7 @@ const config = createConfig(
     
     // RPC設定
     transports: {
-      [baseMainnet.id]: baseRpcUrl,
+      [mainnet.id]: baseRpcUrl,
     },
   })
 );

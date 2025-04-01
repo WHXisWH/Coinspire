@@ -37,7 +37,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     <WagmiConfig config={config}>
       <ConnectKitProvider
         options={{
-          language: 'ja', // 日本語表示
+          language: 'ja' as unknown as any,
           hideBalance: false,
           hideTooltips: false,
         }}

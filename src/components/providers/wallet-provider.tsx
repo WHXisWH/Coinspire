@@ -1,7 +1,7 @@
 'use client';
 
 import { WagmiConfig, createConfig } from 'wagmi';
-import { mainnet } from 'wagmi/chains';
+import { base } from 'wagmi/chains';
 import { ConnectKitProvider, getDefaultConfig } from 'connectkit';
 
 // WalletConnect ProjectIdが環境変数にある場合は使用
@@ -14,22 +14,22 @@ const baseRpcUrl = process.env.NEXT_PUBLIC_BASE_RPC_URL || 'https://mainnet.base
 const config = createConfig(
   getDefaultConfig({
     // App情報
-    appName: 'Coinspire', // "TrendCoin" から変更
+    appName: 'Coinspire', 
     appDescription: 'トレンド分析と創作支援プラットフォーム',
     appUrl: 'https://coinspire.app',
-    
+
     // 必要なチェーンを指定
-    chains: [mainnet],
-    
+    chains: [base],
+
     // WalletConnectのProjectIDを設定
     walletConnectProjectId: walletConnectId,
-    
+
     // 必要ならAlchemyIdも設定
     alchemyId: process.env.NEXT_PUBLIC_ALCHEMY_API_KEY,
-    
-    // RPC設定
+
+
     transports: {
-      [mainnet.id]: baseRpcUrl,
+      [base.id]: baseRpcUrl,
     },
   })
 );

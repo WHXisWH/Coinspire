@@ -19,17 +19,21 @@ const nextConfig = {
       },
     ],
   },
+  // 修正: AIサービスへのリダイレクトはlocalhost:5000以外にする
   async rewrites() {
-    return [
-      // Proxy API requests to AI service in development
-      process.env.NODE_ENV === 'development'
-        ? {
-            source: '/api/ai/:path*',
-            destination: `${process.env.AI_SERVICE_URL || 'http://localhost:5000'}/:path*`,
-          }
-        : null,
-    ].filter(Boolean);
+    // 開発環境でのみリダイレクト設定を行う
+    if (process.env.NODE_ENV === 'development') {
+      return [
+        {
+          source: '/api/ai/:path*',
+          destination: `${process.env.AI_SERVICE_URL || 'http://localhost:5000'}/:path*`,
+        },
+      ];
+    }
+    return [];
   },
+  // Vercelでの静的生成を無効にする
+  output: 'standalone',
 };
 
 module.exports = nextConfig;

@@ -50,8 +50,8 @@ export function TemplateGallery({ trends, onSelect }: TemplateGalleryProps) {
   // トレンドからタグリストを生成
   const trendTags = [
     ...new Set([
-      ...trends.themes.map(theme => theme.name),
-      ...trends.visualStyles.map(style => style.name)
+      ...trends.themes.map((theme) => theme.name),
+      ...trends.visualStyles.map((style) => style.name)
     ])
   ];
   
@@ -70,7 +70,7 @@ export function TemplateGallery({ trends, onSelect }: TemplateGalleryProps) {
           すべて
         </button>
         
-        {trendTags.map(tag => (
+        {trendTags.map((tag: string) => (
           <button
             key={tag}
             onClick={() => setFilter(tag)}
@@ -87,7 +87,7 @@ export function TemplateGallery({ trends, onSelect }: TemplateGalleryProps) {
       
       {/* テンプレートグリッド */}
       <div className="template-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredTemplates.map(template => (
+        {filteredTemplates.map((template: Template) => (
           <div
             key={template.id}
             className="template-card bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow cursor-pointer"
@@ -109,7 +109,7 @@ export function TemplateGallery({ trends, onSelect }: TemplateGalleryProps) {
               </p>
               
               <div className="flex flex-wrap gap-1 mt-2">
-                {template.tags.map(tag => (
+                {template.tags.map((tag: string) => (
                   <span
                     key={tag}
                     className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 rounded-full"

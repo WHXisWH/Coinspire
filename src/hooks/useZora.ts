@@ -67,7 +67,8 @@ export function useZoraMint() {
 export function useZoraCreateCoin() {
   const [coinParams, setCoinParams] = useState<CreateCoinParams | null>(null);
   
-  const { data: writeConfig } = useSimulateContract(
+  // wagmi v2の型互換性に対応した修正
+  const { data: simulateData } = useSimulateContract(
     coinParams ? {
       ...createCoinCall(coinParams),
       // weiの値がある場合、valueに設定
@@ -75,15 +76,16 @@ export function useZoraCreateCoin() {
     } : undefined
   );
   
-  const { writeContract, status, data: txData } = useWriteContract(writeConfig);
+  // writeConfigの型を修正
+  const { writeContract, status, data: txData } = useWriteContract();
   
   const prepareCoin = (params: CreateCoinParams) => {
     setCoinParams(params);
   };
   
   const createCoin = () => {
-    if (writeContract) {
-      writeContract();
+    if (simulateData && writeContract) {
+      writeContract(simulateData.request);
     }
   };
   
@@ -103,7 +105,8 @@ export function useTrendingCoins(count = 10) {
       if (!response.ok) {
         throw new Error('Failed to fetch trending coins');
       }
-      return await response.json();
+      const data = await response.json();
+      return data.coins || [];
     } catch (error) {
       console.error('Error fetching trending coins:', error);
       return [];
@@ -132,7 +135,8 @@ export function useNewCoins(count = 10) {
       if (!response.ok) {
         throw new Error('Failed to fetch new coins');
       }
-      return await response.json();
+      const data = await response.json();
+      return data.coins || [];
     } catch (error) {
       console.error('Error fetching new coins:', error);
       return [];

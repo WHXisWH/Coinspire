@@ -23,11 +23,11 @@ export function KeywordCloud({ keywords }: KeywordCloudProps) {
   }, [keywords]);
   
   // 最大値を取得（フォントサイズの計算用）
-  const maxValue = Math.max(...shuffledKeywords.map(keyword => keyword.value));
+  const maxValue = Math.max(...shuffledKeywords.map((keyword: Keyword) => keyword.value));
   
   return (
     <div className="keyword-cloud flex flex-wrap justify-center gap-3 p-4">
-      {shuffledKeywords.map((keyword) => {
+      {shuffledKeywords.map((keyword: Keyword) => {
         // 相対的なフォントサイズを計算（1.0〜2.5em）
         const fontSize = 1.0 + (keyword.value / maxValue) * 1.5;
         

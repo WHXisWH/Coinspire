@@ -21,28 +21,44 @@ export async function GET(request: NextRequest) {
     });
     
     // SDKからのレスポンスを整形
-    const coins: CoinDetails[] = response?.data?.profile?.coinBalances?.edges?.map((edge: any) => {
-      const node = edge.node;
-      const token = node.token || {};
+    // responseの形式を確認し、適切にデータを抽出
+    const profileData = response?.data?.profile;
+    
+    // 正しいレスポンス構造に対応する処理
+    const coins: CoinDetails[] = [];
+    
+    if (profileData && 
+        typeof profileData === 'object' && 
+        'coinBalances' in profileData && 
+        profileData.coinBalances?.edges) {
       
-      return {
-        id: token.id || '',
-        name: token.name || '',
-        description: token.description || '',
-        address: token.address || '',
-        symbol: token.symbol || '',
-        createdAt: token.createdAt || '',
-        creatorAddress: token.creatorAddress || '',
-        marketCap: token.marketCap || '0',
-        volume24h: token.volume24h || '0',
-        imageUrl: token.media?.previewImage || '',
-        mediaUrl: token.media?.originalUri || '',
-        // 残高情報を追加
-        balance: node.amount?.amountDecimal || 0,
-        balanceRaw: node.amount?.amountRaw || '0',
-        valueUsd: node.valueUsd || '0'
-      };
-    }) || [];
+      const edges = profileData.coinBalances.edges || [];
+      
+      edges.forEach((edge: any) => {
+        if (!edge || !edge.node) return;
+        
+        const node = edge.node;
+        const token = node.token || {};
+        
+        coins.push({
+          id: token.id || '',
+          name: token.name || '',
+          description: token.description || '',
+          address: token.address || '',
+          symbol: token.symbol || '',
+          createdAt: token.createdAt || '',
+          creatorAddress: token.creatorAddress || '',
+          marketCap: token.marketCap || '0',
+          volume24h: token.volume24h || '0',
+          imageUrl: token.media?.previewImage || '',
+          mediaUrl: token.media?.originalUri || '',
+          // 残高情報を追加
+          balance: node.amount?.amountDecimal || 0,
+          balanceRaw: node.amount?.amountRaw || '0',
+          valueUsd: node.valueUsd || '0'
+        });
+      });
+    }
     
     return NextResponse.json({ coins });
   } catch (error) {

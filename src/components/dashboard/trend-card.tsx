@@ -8,7 +8,7 @@ interface TrendCardProps {
 
 export function TrendCard({ name, value, rank }: TrendCardProps) {
   // 値を%に変換（表示用）
-  const percentage = Math.round(value * 100);
+  const percentage: number = Math.round(value * 100);
   
   return (
     <div className="trend-item flex items-center space-x-4">

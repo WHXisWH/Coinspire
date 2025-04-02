@@ -19,6 +19,9 @@ export function TransactionModal({
 }: TransactionModalProps) {
   const [step, setStep] = useState<'processing' | 'success' | 'error'>('processing');
   
+  // txHashがnullの場合はundefinedに変換して型互換性を保つ
+  const transactionHash = txHash ? txHash as `0x${string}` : undefined;
+  
   // Wait for transaction receipt
   const { 
     data: receipt, 
@@ -26,7 +29,7 @@ export function TransactionModal({
     isError, 
     error 
   } = useWaitForTransactionReceipt({
-    hash: txHash,
+    hash: transactionHash,
     enabled: !!txHash && isOpen,
   });
   

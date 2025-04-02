@@ -1,5 +1,6 @@
 import { Inter } from 'next/font/google';
 import { WalletProvider } from '@/components/providers/wallet-provider';
+import { QueryProvider } from '@/components/providers/query-provider';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import '@/styles/globals.css';
@@ -19,15 +20,17 @@ export default function RootLayout({
   return (
     <html lang="ja" suppressHydrationWarning>
       <body className={inter.className}>
-        <WalletProvider>
-          <div className="flex flex-col min-h-screen">
-            <Header />
-            <div className="flex-grow">
-              {children}
+        <QueryProvider>
+          <WalletProvider>
+            <div className="flex flex-col min-h-screen">
+              <Header />
+              <div className="flex-grow">
+                {children}
+              </div>
+              <Footer />
             </div>
-            <Footer />
-          </div>
-        </WalletProvider>
+          </WalletProvider>
+        </QueryProvider>
       </body>
     </html>
   );

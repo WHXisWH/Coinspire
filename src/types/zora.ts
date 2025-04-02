@@ -27,6 +27,11 @@ export interface CoinDetails {
   imageUrl?: string;
   creatorProfile?: string;
   handle?: string;
+  
+  // 残高情報 (ユーザーのコイン残高を表示する場合に使用)
+  balance?: number;
+  balanceRaw?: string;
+  valueUsd?: string;
 }
 
 // トレード方向
@@ -35,12 +40,12 @@ export type TradeDirection = 'buy' | 'sell';
 // トレードパラメータ
 export interface TradeParams {
   direction: TradeDirection;
-  target: string;
+  target: Address;
   args: {
-    recipient: string;
+    recipient: Address;
     orderSize: bigint;
     minAmountOut?: bigint;
     sqrtPriceLimitX96?: bigint;
+    tradeReferrer?: Address;
   };
-  tradeReferrer?: string;
 }

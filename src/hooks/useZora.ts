@@ -68,7 +68,11 @@ export function useZoraCreateCoin() {
   const [coinParams, setCoinParams] = useState<CreateCoinParams | null>(null);
   
   const { data: writeConfig } = useSimulateContract(
-    coinParams ? createCoinCall(coinParams) : undefined
+    coinParams ? {
+      ...createCoinCall(coinParams),
+      // weiの値がある場合、valueに設定
+      value: coinParams.initialPurchaseWei
+    } : undefined
   );
   
   const { writeContract, status, data: txData } = useWriteContract(writeConfig);
@@ -92,7 +96,19 @@ export function useZoraCreateCoin() {
 }
 
 export function useTrendingCoins(count = 10) {
-  const fetcher = () => getTrendingCoins(count);
+  const fetcher = async () => {
+    try {
+      // 実際のAPIエンドポイントを呼び出す
+      const response = await fetch(`/api/coins/trending?count=${count}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch trending coins');
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching trending coins:', error);
+      return [];
+    }
+  };
   
   const { data, error, isLoading, mutate } = useSWR(
     'trending-coins',
@@ -109,7 +125,19 @@ export function useTrendingCoins(count = 10) {
 }
 
 export function useNewCoins(count = 10) {
-  const fetcher = () => getNewCoins(count);
+  const fetcher = async () => {
+    try {
+      // 実際のAPIエンドポイントを呼び出す
+      const response = await fetch(`/api/coins/new?count=${count}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch new coins');
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching new coins:', error);
+      return [];
+    }
+  };
   
   const { data, error, isLoading, mutate } = useSWR(
     'new-coins',
@@ -123,18 +151,4 @@ export function useNewCoins(count = 10) {
     error,
     refresh: mutate
   };
-}
-
-// getTrendingCoinsとgetNewCoinsは実際にはzora.tsから再エクスポートされるべきですが、
-// インポートエラーを防ぐためのプレースホルダとして定義しています
-async function getTrendingCoins(count: number): Promise<CoinDetails[]> {
-  // この関数は実際にはsrc/lib/zora.tsから呼び出す
-  // ここではモックデータを返す
-  return [];
-}
-
-async function getNewCoins(count: number): Promise<CoinDetails[]> {
-  // この関数は実際にはsrc/lib/zora.tsから呼び出す
-  // ここではモックデータを返す
-  return [];
 }

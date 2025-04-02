@@ -1,50 +1,48 @@
 import useSWR from 'swr';
-import axios from 'axios';
 import type { TrendAnalysis } from '@/types/trends';
 
 // API URLの設定
 const API_URL = '/api/trends';
 
-// 空のトレンドデータ
-const emptyTrends: TrendAnalysis = {
-  keywords: [],
-  themes: [],
-  colorPalettes: [],
-  visualStyles: []
+// 静的なフォールバックデータ
+const fallbackTrends: TrendAnalysis = {
+  keywords: [
+    { text: 'NFT', value: 30 },
+    { text: 'Web3', value: 25 },
+    { text: 'ZORA', value: 22 },
+    { text: '仮想通貨', value: 20 },
+    { text: 'ミーム', value: 18 },
+  ],
+  themes: [
+    { name: 'サイバーパンク', popularity: 0.8 },
+    { name: 'レトロ風アート', popularity: 0.75 },
+    { name: '日本のアニメスタイル', popularity: 0.7 },
+  ],
+  colorPalettes: [
+    { name: 'ネオン', colors: ['#FF00FF', '#00FFFF', '#FFFF00', '#FF00AA'] },
+    { name: 'パステル', colors: ['#FFD1DC', '#FFECF1', '#A2D2FF', '#EFD3FF'] },
+  ],
+  visualStyles: [
+    { name: 'ピクセルアート', examples: ['https://example.com/pixel1.jpg'] },
+    { name: 'グリッチアート', examples: ['https://example.com/glitch1.jpg'] },
+  ]
 };
 
-// エラーを処理してデータを取得する関数
+// SWR用フェッチャー関数
 const fetcher = async (url: string) => {
   try {
-    const response = await axios.get(url);
-    return response.data;
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+    return await response.json();
   } catch (error) {
     console.error('Error fetching data:', error);
-    // API呼び出し失敗時は、ハードコードされたモックデータを返す
+    // エラー時はフォールバックデータを返す
     if (url.includes('/trends')) {
-      return {
-        keywords: [
-          { text: 'NFT', value: 30 },
-          { text: 'Web3', value: 25 },
-          { text: 'ZORA', value: 22 },
-          { text: '仮想通貨', value: 20 },
-          { text: 'ミーム', value: 18 },
-        ],
-        themes: [
-          { name: 'サイバーパンク', popularity: 0.8 },
-          { name: 'レトロ風アート', popularity: 0.75 },
-          { name: '日本のアニメスタイル', popularity: 0.7 },
-        ],
-        colorPalettes: [
-          { name: 'ネオン', colors: ['#FF00FF', '#00FFFF', '#FFFF00', '#FF00AA'] },
-          { name: 'パステル', colors: ['#FFD1DC', '#FFECF1', '#A2D2FF', '#EFD3FF'] },
-        ],
-        visualStyles: [
-          { name: 'ピクセルアート', examples: ['https://example.com/pixel1.jpg'] },
-          { name: 'グリッチアート', examples: ['https://example.com/glitch1.jpg'] },
-        ]
-      };
+      return fallbackTrends;
     }
+    // その他のURLの場合はエラーを投げる
     throw error;
   }
 };
@@ -58,21 +56,23 @@ export function useTrends() {
     refreshInterval: 30 * 60 * 1000,
     // 最大24時間キャッシュ
     dedupingInterval: 24 * 60 * 60 * 1000,
-    // 失敗時の再試行
+    // 失敗時の再試行設定
     onErrorRetry: (error, key, config, revalidate, { retryCount }) => {
-      // 5回まで再試行
-      if (retryCount >= 5) return;
+      // 3回まで再試行
+      if (retryCount >= 3) return;
       // 5秒後に再試行
       setTimeout(() => revalidate({ retryCount }), 5000);
     },
+    // フォーカス時に再検証しない
+    revalidateOnFocus: false,
     // エラーが起きても古いデータは表示
     keepPreviousData: true,
-    // 代替データ
-    fallbackData: emptyTrends
+    // 初期値としてのフォールバックデータ
+    fallbackData: fallbackTrends
   });
 
   return {
-    trends: data || emptyTrends,
+    trends: data || fallbackTrends,
     isLoading,
     isError: error,
     refresh: mutate
@@ -102,6 +102,7 @@ export function useRecommendations(keywords?: string[], style?: string) {
     fetcher,
     {
       keepPreviousData: true,
+      revalidateOnFocus: false,
       fallbackData: { templates: [], prompts: [] }
     }
   );

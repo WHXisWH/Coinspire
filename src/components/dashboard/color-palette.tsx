@@ -11,7 +11,7 @@ export function ColorPaletteDisplay({ name, colors }: ColorPaletteDisplayProps) 
       <h3 className="text-lg font-medium mb-2">{name}</h3>
       
       <div className="palette-display h-16 rounded-md overflow-hidden flex">
-        {colors.map((color, index) => (
+        {colors.map((color: string, index: number) => (
           <div
             key={`${color}-${index}`}
             className="flex-1 relative group cursor-pointer"
@@ -26,7 +26,7 @@ export function ColorPaletteDisplay({ name, colors }: ColorPaletteDisplayProps) 
       </div>
       
       <div className="color-codes mt-2 flex flex-wrap gap-1">
-        {colors.map((color, index) => (
+        {colors.map((color: string, index: number) => (
           <div
             key={`code-${color}-${index}`}
             className="color-code px-2 py-1 rounded text-xs"

@@ -8,6 +8,7 @@ import { KeywordCloud } from '@/components/dashboard/keyword-cloud';
 import { ColorPaletteDisplay } from '@/components/dashboard/color-palette';
 import { TrendCard } from '@/components/dashboard/trend-card';
 import { CoinList } from '@/components/dashboard/coin-list';
+import type { Theme, VisualStyle } from '@/types/trends';
 
 export default function DashboardPage() {
   const { trends, isLoading: trendsLoading } = useTrends();
@@ -80,7 +81,7 @@ export default function DashboardPage() {
                 <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow h-full">
                   <h2 className="text-xl font-semibold mb-4">人気テーマ</h2>
                   <div className="space-y-4">
-                    {trends.themes.slice(0, 5).map((theme, index) => (
+                    {trends.themes.slice(0, 5).map((theme: Theme, index: number) => (
                       <TrendCard 
                         key={theme.name}
                         name={theme.name}
@@ -97,7 +98,7 @@ export default function DashboardPage() {
                 <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow h-full">
                   <h2 className="text-xl font-semibold mb-4">人気スタイル</h2>
                   <div className="space-y-4">
-                    {trends.visualStyles.slice(0, 5).map((style, index) => (
+                    {trends.visualStyles.slice(0, 5).map((style: VisualStyle, index: number) => (
                       <TrendCard 
                         key={style.name}
                         name={style.name}

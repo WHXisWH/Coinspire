@@ -1,169 +1,135 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
-import { useTrends } from '@/hooks/useTrends';
-import { useTrendingCoins, useNewCoins } from '@/hooks/useZora';
-import { KeywordCloud } from '@/components/dashboard/keyword-cloud';
-import { ColorPaletteDisplay } from '@/components/dashboard/color-palette';
-import { TrendCard } from '@/components/dashboard/trend-card';
-import { CoinList } from '@/components/dashboard/coin-list';
-import type { Theme, VisualStyle } from '@/types/trends';
+import Image from 'next/image';
+import type { TrendAnalysis, Template } from '@/types/trends';
 
-export default function DashboardPage() {
-  const { trends, isLoading: trendsLoading } = useTrends();
-  const { coins: trendingCoins, isLoading: trendingLoading } = useTrendingCoins(5);
-  const { coins: newCoins, isLoading: newCoinsLoading } = useNewCoins(5);
+interface TemplateGalleryProps {
+  trends: TrendAnalysis;
+  onSelect: (templateId: string) => void;
+}
+
+export function TemplateGallery({ trends, onSelect }: TemplateGalleryProps) {
+  const [filter, setFilter] = useState<string>('all');
   
-  const [activeTab, setActiveTab] = useState<'trends' | 'coins'>('trends');
+  // トレンドからモックテンプレートを生成
+  // 実際のアプリではAPIから取得する形に変更
+  const mockTemplates: Template[] = [
+    {
+      id: 'template-1',
+      name: 'ネオンサイバーパンク',
+      description: '鮮やかなネオンカラーとサイバーパンク風の未来都市をテーマにしたスタイル',
+      imageUrl: '/templates/cyber.jpg',
+      tags: ['サイバーパンク', 'ネオン', '未来的'],
+      aiPrompt: 'サイバーパンクな世界、ネオンの光、未来都市、夜景、高層ビル'
+    },
+    {
+      id: 'template-2',
+      name: 'アニメスタイル',
+      description: '日本のアニメを思わせる鮮やかなキャラクターデザイン',
+      imageUrl: '/templates/anime.jpg',
+      tags: ['アニメ', 'カラフル', 'キャラクター'],
+      aiPrompt: '日本のアニメスタイル、鮮やかな色彩、かわいいキャラクター、2Dイラスト'
+    },
+    {
+      id: 'template-3',
+      name: 'ミニマリストデザイン',
+      description: 'シンプルで洗練されたミニマリストスタイル、抽象的な要素を取り入れたデザイン',
+      imageUrl: '/templates/minimal.jpg',
+      tags: ['ミニマリスト', 'シンプル', '抽象的'],
+      aiPrompt: 'ミニマリスト、シンプルデザイン、抽象的形状、少ない色、空白、余白、洗練'
+    },
+    // 実際のトレンドからモック生成するロジックをここに追加
+  ];
+  
+  // フィルタリングされたテンプレート
+  const filteredTemplates = filter === 'all' 
+    ? mockTemplates 
+    : mockTemplates.filter(template => template.tags.includes(filter));
+  
+  // トレンドからタグリストを生成
+  const trendTags = [
+    ...new Set([
+      ...trends.themes.map((theme) => theme.name),
+      ...trends.visualStyles.map((style) => style.name)
+    ])
+  ];
   
   return (
-    <main className="container mx-auto p-4 md:p-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
-        <h1 className="text-3xl font-bold mb-4 md:mb-0">トレンドダッシュボード</h1>
-        
-        <Link
-          href="/create"
-          className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium"
+    <div className="template-gallery">
+      {/* フィルターセクション */}
+      <div className="filter-section mb-6 flex flex-wrap gap-2">
+        <button
+          onClick={() => setFilter('all')}
+          className={`px-3 py-1 rounded-full text-sm ${
+            filter === 'all'
+              ? 'bg-blue-500 text-white'
+              : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
+          }`}
         >
-          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-          </svg>
-          作成する
-        </Link>
+          すべて
+        </button>
+        
+        {trendTags.map((tag: string) => (
+          <button
+            key={tag}
+            onClick={() => setFilter(tag)}
+            className={`px-3 py-1 rounded-full text-sm ${
+              filter === tag
+                ? 'bg-blue-500 text-white'
+                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
+            }`}
+          >
+            {tag}
+          </button>
+        ))}
       </div>
       
-      {/* タブ切り替え */}
-      <div className="tabs-header mb-6 border-b border-gray-200 dark:border-gray-700">
-        <div className="flex">
-          <button
-            className={`px-4 py-2 font-medium ${
-              activeTab === 'trends'
-                ? 'text-blue-600 border-b-2 border-blue-600'
-                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-            }`}
-            onClick={() => setActiveTab('trends')}
+      {/* テンプレートグリッド */}
+      <div className="template-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredTemplates.map((template: Template) => (
+          <div
+            key={template.id}
+            className="template-card bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+            onClick={() => onSelect(template.id)}
           >
-            トレンド分析
-          </button>
-          <button
-            className={`px-4 py-2 font-medium ${
-              activeTab === 'coins'
-                ? 'text-blue-600 border-b-2 border-blue-600'
-                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-            }`}
-            onClick={() => setActiveTab('coins')}
-          >
-            人気コイン
-          </button>
-        </div>
-      </div>
-      
-      {/* トレンド分析タブ */}
-      {activeTab === 'trends' && (
-        <div className="trends-tab">
-          {trendsLoading ? (
-            <div className="loading-state flex justify-center items-center p-12">
-              <span className="loading">トレンドデータをロード中...</span>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {/* キーワードクラウド */}
-              <div className="col-span-1 md:col-span-2 lg:col-span-1">
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-                  <h2 className="text-xl font-semibold mb-4">人気キーワード</h2>
-                  <KeywordCloud keywords={trends.keywords} />
-                </div>
-              </div>
-              
-              {/* 人気テーマ */}
-              <div className="trend-card">
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow h-full">
-                  <h2 className="text-xl font-semibold mb-4">人気テーマ</h2>
-                  <div className="space-y-4">
-                    {trends.themes.slice(0, 5).map((theme: Theme, index: number) => (
-                      <TrendCard 
-                        key={theme.name}
-                        name={theme.name}
-                        value={theme.popularity}
-                        rank={index + 1}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
-              
-              {/* ビジュアルスタイル */}
-              <div className="trend-card">
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow h-full">
-                  <h2 className="text-xl font-semibold mb-4">人気スタイル</h2>
-                  <div className="space-y-4">
-                    {trends.visualStyles.slice(0, 5).map((style: VisualStyle, index: number) => (
-                      <TrendCard 
-                        key={style.name}
-                        name={style.name}
-                        value={index === 0 ? 1 : 1 - (index * 0.15)}
-                        rank={index + 1}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
-              
-              {/* カラーパレット */}
-              <div className="col-span-1 md:col-span-3">
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-                  <h2 className="text-xl font-semibold mb-4">トレンドカラーパレット</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {trends.colorPalettes.slice(0, 3).map((palette) => (
-                      <ColorPaletteDisplay
-                        key={palette.name}
-                        name={palette.name}
-                        colors={palette.colors}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-      
-      {/* 人気コインタブ */}
-      {activeTab === 'coins' && (
-        <div className="coins-tab">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* トレンドコイン */}
-            <div className="trending-coins">
-              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-                <h2 className="text-xl font-semibold mb-4">人気上昇中のコイン</h2>
-                {trendingLoading ? (
-                  <div className="loading-state flex justify-center p-6">
-                    <span className="loading">ロード中...</span>
-                  </div>
-                ) : (
-                  <CoinList coins={trendingCoins} />
-                )}
-              </div>
+            <div className="relative h-48">
+              <Image
+                src={template.imageUrl}
+                alt={template.name}
+                fill
+                className="object-cover"
+              />
             </div>
             
-            {/* 新着コイン */}
-            <div className="new-coins">
-              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-                <h2 className="text-xl font-semibold mb-4">新着コイン</h2>
-                {newCoinsLoading ? (
-                  <div className="loading-state flex justify-center p-6">
-                    <span className="loading">ロード中...</span>
-                  </div>
-                ) : (
-                  <CoinList coins={newCoins} />
-                )}
+            <div className="p-4">
+              <h3 className="text-lg font-semibold mb-2">{template.name}</h3>
+              <p className="text-gray-600 dark:text-gray-400 text-sm mb-3">
+                {template.description}
+              </p>
+              
+              <div className="flex flex-wrap gap-1 mt-2">
+                {template.tags.map((tag: string) => (
+                  <span
+                    key={tag}
+                    className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 rounded-full"
+                  >
+                    {tag}
+                  </span>
+                ))}
               </div>
             </div>
           </div>
+        ))}
+      </div>
+      
+      {filteredTemplates.length === 0 && (
+        <div className="empty-state text-center p-10">
+          <p className="text-gray-500 dark:text-gray-400">
+            このフィルターに一致するテンプレートが見つかりませんでした。
+          </p>
         </div>
       )}
-    </main>
+    </div>
   );
 }

@@ -22,16 +22,16 @@ export function TransactionModal({
   // txHashがnullの場合はundefinedに変換して型互換性を保つ
   const transactionHash = txHash ? txHash as `0x${string}` : undefined;
   
-  // Wait for transaction receipt
+  // 条件付きでトランザクションレシートを監視
+  // enabled プロパティは使用せず、hash が存在する場合にのみフックを呼び出す
   const { 
     data: receipt, 
     isLoading, 
     isError, 
     error 
-  } = useWaitForTransactionReceipt({
+  } = isOpen && transactionHash ? useWaitForTransactionReceipt({
     hash: transactionHash,
-    enabled: !!txHash && isOpen,
-  });
+  }) : { data: undefined, isLoading: false, isError: false, error: null };
   
   useEffect(() => {
     if (receipt) {

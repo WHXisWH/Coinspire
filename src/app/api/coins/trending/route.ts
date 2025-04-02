@@ -13,24 +13,30 @@ export async function GET(request: NextRequest) {
     });
     
     // SDKからのレスポンスを整形
-    const coins: CoinDetails[] = response?.data?.exploreList?.edges?.map((edge: any) => {
-      const node = edge.node;
-      return {
-        id: node.id || '',
-        name: node.name || '',
-        description: node.description || '',
-        address: node.address || '',
-        symbol: node.symbol || '',
-        createdAt: node.createdAt || '',
-        creatorAddress: node.creatorAddress || '',
-        marketCap: node.marketCap || '0',
-        volume24h: node.volume24h || '0',
-        imageUrl: node.media?.previewImage || '',
-        mediaUrl: node.media?.originalUri || '',
-        creatorProfile: node.creatorProfile || '',
-        handle: node.handle || ''
-      };
-    }) || [];
+    const coins: CoinDetails[] = [];
+    
+    if (response?.data?.exploreList?.edges) {
+      response.data.exploreList.edges.forEach((edge: any) => {
+        if (!edge || !edge.node) return;
+        
+        const node = edge.node;
+        coins.push({
+          id: node.id || '',
+          name: node.name || '',
+          description: node.description || '',
+          address: node.address || '',
+          symbol: node.symbol || '',
+          createdAt: node.createdAt || '',
+          creatorAddress: node.creatorAddress || '',
+          marketCap: node.marketCap || '0',
+          volume24h: node.volume24h || '0',
+          imageUrl: node.media?.previewImage || '',
+          mediaUrl: node.media?.originalUri || '',
+          creatorProfile: node.creatorProfile || '',
+          handle: node.handle || ''
+        });
+      });
+    }
     
     return NextResponse.json({ coins });
   } catch (error) {

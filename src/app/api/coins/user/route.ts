@@ -27,14 +27,23 @@ export async function GET(request: NextRequest) {
     // 正しいレスポンス構造に対応する処理
     const coins: CoinDetails[] = [];
     
+    // 型安全な方法でプロパティの存在を確認
     if (profileData && 
         typeof profileData === 'object' && 
-        'coinBalances' in profileData && 
-        profileData.coinBalances?.edges) {
+        profileData !== null) {
       
-      const edges = profileData.coinBalances.edges || [];
+      // 明示的な型アサーションを使用
+      const typedProfileData = profileData as { 
+        coinBalances?: { 
+          edges?: Array<{ 
+            node?: any 
+          }> 
+        } 
+      };
       
-      edges.forEach((edge: any) => {
+      const edges = typedProfileData.coinBalances?.edges || [];
+      
+      edges.forEach((edge) => {
         if (!edge || !edge.node) return;
         
         const node = edge.node;

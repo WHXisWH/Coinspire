@@ -4,7 +4,7 @@ import type { TrendAnalysis } from '@/types/trends';
 // AIサービスURL
 const AI_SERVICE_URL = 
   process.env.NEXT_PUBLIC_AI_SERVICE_URL || 
-  (typeof window !== 'undefined' ? '/api/ai' : 'http://localhost:5000');
+  (typeof window !== 'undefined' ? '/api' : 'http://localhost:5000');
 
 // AIサービスタイムアウト (ms)
 const AI_SERVICE_TIMEOUT = parseInt(process.env.AI_SERVICE_TIMEOUT || '5000', 10);
@@ -150,7 +150,7 @@ function getMockRecommendationData(options: {
         id: 'template-cyber-1',
         name: `${style} デザイン`,
         description: '鮮やかな色彩とテクノロジー感あふれるデザイン',
-        imageUrl: '/templates/cyber-1.jpg',
+        imageUrl: '/images/templates/cyber-1.png',
         tags: ['サイバー', '未来的', 'テック'],
         aiPrompt: `サイバーパンクな世界、${keywordsText}、ネオンの光、未来都市`
       },
@@ -158,7 +158,7 @@ function getMockRecommendationData(options: {
         id: 'template-abstract-1',
         name: `抽象的 アート`,
         description: '幾何学的な形状と複雑なパターンを用いた抽象的なデザイン',
-        imageUrl: '/templates/abstract-1.jpg',
+        imageUrl: '/images/templates/abstract-1.png',
         tags: ['抽象', 'パターン', 'カラフル'],
         aiPrompt: `抽象的なデジタルアート、${keywordsText}、幾何学模様、波状のパターン`
       }

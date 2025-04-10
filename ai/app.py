@@ -96,8 +96,8 @@ def get_recommendation():
             {
                 "id": "template-cyber-1",
                 "name": f"{style or '未来的'} デザイン",
-                "description": "鮮やかな色彩とテクノロジー感あふれるデザイン",
-                "imageUrl": "/templates/cyber-1.jpg",
+                "description": "鮮やかな色彩とテック感あふれるデザイン",
+                "imageUrl": "/templates/cyber-1.png",
                 "tags": ["サイバー", "未来的", "テック"],
                 "aiPrompt": f"サイバーパンクな世界、{', '.join(keywords[:3]) if keywords else 'ネオンの光、未来都市'}"
             },
@@ -105,7 +105,7 @@ def get_recommendation():
                 "id": "template-abstract-1",
                 "name": f"{style or '抽象的'} アート",
                 "description": "幾何学的な形状と複雑なパターンを用いた抽象的なデザイン",
-                "imageUrl": "/templates/abstract-1.jpg",
+                "imageUrl": "/templates/abstract-1.png",
                 "tags": ["抽象", "パターン", "カラフル"],
                 "aiPrompt": f"抽象的なデジタルアート、{', '.join(keywords[:3]) if keywords else '幾何学模様、波状のパターン'}"
             }

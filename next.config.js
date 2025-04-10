@@ -2,6 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
+    unoptimized: true, // ← ✅ これを追加
     domains: [
       'nftstorage.link',
       'ipfs.io',
@@ -19,9 +20,7 @@ const nextConfig = {
       },
     ],
   },
-  // 修正: AIサービスへのリダイレクトはlocalhost:5000以外にする
   async rewrites() {
-    // 開発環境でのみリダイレクト設定を行う
     if (process.env.NODE_ENV === 'development') {
       return [
         {
@@ -32,7 +31,6 @@ const nextConfig = {
     }
     return [];
   },
-  // Vercelでの静的生成を無効にする
   output: 'standalone',
 };
 

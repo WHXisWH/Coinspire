@@ -65,7 +65,7 @@ function getStaticRecommendation(
       id: 'template-cyber-1',
       name: `${styleText} デザイン`,
       description: '鮮やかな色彩とテクノロジー感あふれるデザイン',
-      imageUrl: '/templates/cyber-1.jpg',
+      imageUrl: '/images/templates/cyber-1.png',
       tags: ['サイバー', '未来的', 'テック'],
       aiPrompt: `サイバーパンクな世界、${keywordsText}、ネオンの光、未来都市`
     },
@@ -73,7 +73,7 @@ function getStaticRecommendation(
       id: 'template-abstract-1',
       name: `抽象的 アート`,
       description: '幾何学的な形状と複雑なパターンを用いた抽象的なデザイン',
-      imageUrl: '/templates/abstract-1.jpg',
+      imageUrl: '/images/templates/abstract-1.png',
       tags: ['抽象', 'パターン', 'カラフル'],
       aiPrompt: `抽象的なデジタルアート、${keywordsText}、幾何学模様、波状のパターン`
     },
@@ -81,7 +81,7 @@ function getStaticRecommendation(
       id: 'template-anime-1',
       name: `アニメ風 イラスト`,
       description: '日本のアニメスタイルを取り入れたカラフルなイラスト',
-      imageUrl: '/templates/anime-1.jpg',
+      imageUrl: '/images/templates/anime-1.png',
       tags: ['アニメ', 'イラスト', 'カラフル'],
       aiPrompt: `アニメスタイルのイラスト、${keywordsText}、鮮やかな色彩、2Dスタイル`
     },
@@ -89,7 +89,7 @@ function getStaticRecommendation(
       id: 'template-minimal-1',
       name: `ミニマル デザイン`,
       description: 'シンプルで洗練されたミニマルデザイン',
-      imageUrl: '/templates/minimal-1.jpg',
+      imageUrl: '/images/templates/minimal-1.png',
       tags: ['ミニマル', 'シンプル', '洗練'],
       aiPrompt: `ミニマルなデザイン、${keywordsText}、シンプル、余白、少ない色`
     },
@@ -97,7 +97,7 @@ function getStaticRecommendation(
       id: 'template-retro-1',
       name: `レトロ スタイル`,
       description: '80年代や90年代を思わせるレトロなデザイン',
-      imageUrl: '/templates/retro-1.jpg',
+      imageUrl: '/images/templates/retro-1.png',
       tags: ['レトロ', 'ビンテージ', 'ノスタルジック'],
       aiPrompt: `レトロスタイル、${keywordsText}、80年代、ビンテージ感、ノスタルジック`
     }

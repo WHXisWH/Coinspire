@@ -5,12 +5,16 @@
 :root {
   --foreground-rgb: 0, 0, 0;
   --background-rgb: 255, 255, 255;
+  --card-bg: 255, 255, 255;
+  --card-border: 229, 231, 235;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --foreground-rgb: 255, 255, 255;
     --background-rgb: 15, 23, 42;
+    --card-bg: 31, 41, 55;
+    --card-border: 55, 65, 81;
   }
 }
 
@@ -19,10 +23,42 @@ body {
   background: rgb(var(--background-rgb));
 }
 
+/* Text Gradients */
 .text-gradient-primary {
-  @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-600;
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-primary-500 to-accent-500;
 }
 
+.text-gradient-creative {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500;
+}
+
+/* Card Styles */
+.card {
+  @apply bg-white dark:bg-gray-800 rounded-xl shadow-card border border-gray-200 dark:border-gray-700 overflow-hidden transition-all duration-200;
+}
+
+.card:hover {
+  @apply shadow-soft;
+}
+
+/* Button Styles */
+.btn {
+  @apply inline-flex items-center justify-center rounded-lg font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+}
+
+.btn-primary {
+  @apply btn bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800;
+}
+
+.btn-secondary {
+  @apply btn bg-white text-primary-600 border border-primary-600 hover:bg-primary-50 active:bg-primary-100;
+}
+
+.btn-outline {
+  @apply btn bg-transparent border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700;
+}
+
+/* Loading Animation */
 .loading {
   @apply inline-flex items-center;
 }
@@ -42,4 +78,73 @@ body {
   75%, 100% {
     content: "...";
   }
+}
+
+/* Fade In Animation */
+.fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Input Styles */
+.input-field {
+  @apply w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500;
+}
+
+/* Input Error State */
+.input-error {
+  @apply border-error-500 focus:ring-error-500 focus:border-error-500;
+}
+
+/* Badge Styles */
+.badge {
+  @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+}
+
+.badge-primary {
+  @apply badge bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-300;
+}
+
+.badge-success {
+  @apply badge bg-success-50 text-success-700 dark:bg-success-700/20 dark:text-success-500;
+}
+
+/* Section Styles */
+.section {
+  @apply py-12;
+}
+
+.section-title {
+  @apply text-2xl md:text-3xl font-bold mb-6;
+}
+
+/* Alert Styles */
+.alert {
+  @apply p-4 rounded-lg border mb-4;
+}
+
+.alert-info {
+  @apply alert bg-accent-50 border-accent-200 text-accent-700 dark:bg-accent-900/20 dark:border-accent-800 dark:text-accent-300;
+}
+
+.alert-success {
+  @apply alert bg-success-50 border-success-200 text-success-700 dark:bg-success-900/20 dark:border-success-800 dark:text-success-300;
+}
+
+.alert-error {
+  @apply alert bg-error-50 border-error-200 text-error-700 dark:bg-error-900/20 dark:border-error-800 dark:text-error-300;
+}
+
+.alert-warning {
+  @apply alert bg-warning-50 border-warning-200 text-warning-700 dark:bg-warning-900/20 dark:border-warning-800 dark:text-warning-300;
 }

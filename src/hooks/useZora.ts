@@ -7,7 +7,7 @@ import type { Address, SimulateContractParameters, Chain, Account } from 'viem';
 import type { CreateCoinParams } from '@/types/zora';
 import useSWR from 'swr';
 
-// useZoraMint hook (No changes)
+
 export function useZoraMint() {
   const { data: walletClient } = useWalletClient();
   const publicClient = usePublicClient();
@@ -23,7 +23,7 @@ export function useZoraMint() {
     creatorAddress: Address
   ) => {
     if (!walletClient || !publicClient) {
-      setError('Wallet not connected'); // Changed to English
+      setError('Wallet not connected'); 
       return null;
     }
     setIsLoading(true);
@@ -44,7 +44,7 @@ export function useZoraMint() {
       setResult(mintResult);
       return mintResult;
     } catch (err: any) {
-      const errorMessage = err.message || 'Error occurred during coin creation'; // Changed to English
+      const errorMessage = err.message || 'Error occurred during coin creation'; 
       setError(errorMessage);
       return null;
     } finally {
@@ -60,7 +60,7 @@ export function useZoraMint() {
   };
 }
 
-// useZoraCreateCoin hook (Corrected)
+
 export function useZoraCreateCoin() {
   const [coinParams, setCoinParams] = useState<CreateCoinParams | null>(null);
   const [simulateConfig, setSimulateConfig] = useState<SimulateContractParameters | undefined>(undefined);
@@ -79,7 +79,7 @@ export function useZoraCreateCoin() {
 
         if (callResult && callResult.address && callResult.abi && callResult.functionName && callResult.args) {
 
-            // Prepare the config object with essential properties
+
             const configForSimulate: SimulateContractParameters = {
               address: callResult.address,
               abi: callResult.abi,
@@ -87,10 +87,7 @@ export function useZoraCreateCoin() {
               args: callResult.args,
             };
 
-            // Do not explicitly set 'account' or 'chain'.
-            // useSimulateContract will automatically use the connected wallet's account and chain.
 
-            // Add 'value' if initialPurchaseWei exists
             if (coinParams.initialPurchaseWei) {
               configForSimulate.value = coinParams.initialPurchaseWei;
             }
@@ -138,7 +135,7 @@ export function useZoraCreateCoin() {
     if (simulateData?.request && writeContract) {
       writeContract(simulateData.request);
     } else {
-        // Added check for simulateError to provide better context
+        
         if (simulateError) {
              console.error("Cannot create coin due to simulation error:", simulateError);
         } else {
@@ -160,7 +157,6 @@ export function useZoraCreateCoin() {
 }
 
 
-// useTrendingCoins hook (No changes)
 export function useTrendingCoins(count = 10) {
     const fetcher = async (url: string) => {
       try {
@@ -194,7 +190,6 @@ export function useTrendingCoins(count = 10) {
     };
 }
 
-// useNewCoins hook (No changes)
 export function useNewCoins(count = 10) {
     const fetcher = async (url: string) => {
       try {

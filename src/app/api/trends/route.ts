@@ -1,34 +1,32 @@
 import { NextResponse } from 'next/server';
-import axios from 'axios';
+import { fetchTrendsFromAI } from '@/lib/ai';
 
-// AIサービスURL
-// 注意: 実運用環境ではlocalhost:5000は使用できないため、環境変数またはフォールバックURLを使用する
-const AI_SERVICE_URL = process.env.AI_SERVICE_URL || '/api/ai';
-const AI_SERVICE_API_KEY = process.env.AI_SERVICE_API_KEY;
-
+/**
+ * トレンドデータを返すAPIエンドポイント
+ */
 export async function GET() {
-  // ビルド時にはモックデータを返す
-  if (process.env.NODE_ENV === 'production') {
-    return getStaticTrendData();
-  }
-
   try {
+    // 環境フラグをチェック
+    const enableAIFeatures = process.env.NEXT_PUBLIC_ENABLE_AI_FEATURES !== 'false';
+    
+    if (!enableAIFeatures) {
+      console.log('AI features are disabled. Returning static trend data.');
+      return getStaticTrendData();
+    }
+    
     // AI分析エンジンからトレンドデータを取得
-    // 実際のプロダクションでは、このデータをキャッシュするか、
-    // 定期的にバックグラウンドジョブで更新することを検討
-    const response = await axios.get(`${AI_SERVICE_URL}/trends`, {
-      headers: AI_SERVICE_API_KEY ? {
-        'X-API-Key': AI_SERVICE_API_KEY
-      } : undefined,
-      // タイムアウトを設定
-      timeout: 3000
+    const trendData = await fetchTrendsFromAI();
+    
+    return NextResponse.json(trendData, { 
+      status: 200,
+      headers: {
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+      }
     });
-    
-    return NextResponse.json(response.data);
   } catch (error) {
-    console.error('Error fetching trends:', error);
+    console.error('Error in trends API route:', error);
     
-    // AIサービスが利用できない場合、モックデータを返す
+    // エラー時はモックデータを返す
     return getStaticTrendData();
   }
 }
@@ -61,6 +59,12 @@ function getStaticTrendData() {
       { name: 'ピクセルアート', examples: ['https://example.com/pixel1.jpg'] },
       { name: 'グリッチアート', examples: ['https://example.com/glitch1.jpg'] },
       { name: '3Dレンダリング', examples: ['https://example.com/3d1.jpg'] },
-    ]
-  }, { status: 200 });
+    ],
+    updatedAt: new Date().toISOString()
+  }, { 
+    status: 200,
+    headers: {
+      'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+    }
+  });
 }

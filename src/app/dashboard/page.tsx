@@ -8,7 +8,7 @@ import { KeywordCloud } from '@/components/dashboard/keyword-cloud';
 import { ColorPaletteDisplay } from '@/components/dashboard/color-palette';
 import { TrendCard } from '@/components/dashboard/trend-card';
 import { CoinList } from '@/components/dashboard/coin-list';
-// type だけをインポートして Next.js ページからエクスポートされないようにする
+import { TrendChart } from '@/components/dashboard/trend-chart';
 import type { Theme, VisualStyle, ColorPalette } from '@/types/trends';
 
 export default function DashboardPage() {
@@ -17,6 +17,7 @@ export default function DashboardPage() {
   const { coins: newCoins, isLoading: newCoinsLoading } = useNewCoins(5);
   
   const [activeTab, setActiveTab] = useState<'trends' | 'coins'>('trends');
+  const [activeView, setActiveView] = useState<'cloud' | 'chart'>('cloud');
   
   return (
     <main className="container mx-auto p-4 md:p-8">
@@ -68,65 +69,101 @@ export default function DashboardPage() {
               <span className="loading">トレンドデータをロード中...</span>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {/* キーワードクラウド */}
-              <div className="col-span-1 md:col-span-2 lg:col-span-1">
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-                  <h2 className="text-xl font-semibold mb-4">人気キーワード</h2>
-                  <KeywordCloud keywords={trends.keywords} />
+            <>
+              {/* 表示切り替えボタン（キーワードのみ） */}
+              <div className="view-toggle flex justify-end mb-4">
+                <div className="inline-flex rounded-md shadow-sm">
+                  <button
+                    onClick={() => setActiveView('cloud')}
+                    className={`px-4 py-2 text-sm font-medium rounded-l-lg ${
+                      activeView === 'cloud'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600'
+                    }`}
+                  >
+                    クラウド表示
+                  </button>
+                  <button
+                    onClick={() => setActiveView('chart')}
+                    className={`px-4 py-2 text-sm font-medium rounded-r-lg ${
+                      activeView === 'chart'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600'
+                    }`}
+                  >
+                    チャート表示
+                  </button>
                 </div>
               </div>
-              
-              {/* 人気テーマ */}
-              <div className="trend-card">
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow h-full">
-                  <h2 className="text-xl font-semibold mb-4">人気テーマ</h2>
-                  <div className="space-y-4">
-                    {trends.themes.slice(0, 5).map((theme: Theme, index: number) => (
-                      <TrendCard 
-                        key={theme.name}
-                        name={theme.name}
-                        value={theme.popularity}
-                        rank={index + 1}
-                      />
-                    ))}
+            
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {/* キーワードクラウド/チャート */}
+                <div className="col-span-1 md:col-span-2 lg:col-span-1">
+                  <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                    <h2 className="text-xl font-semibold mb-4">人気キーワード</h2>
+                    {activeView === 'cloud' ? (
+                      <KeywordCloud keywords={trends.keywords} />
+                    ) : (
+                      <TrendChart data={trends.keywords} type="keywords" />
+                    )}
+                  </div>
+                </div>
+                
+                {/* 人気テーマ */}
+                <div className="trend-card">
+                  <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow h-full">
+                    <h2 className="text-xl font-semibold mb-4">人気テーマ</h2>
+                    {activeView === 'chart' ? (
+                      <TrendChart data={trends.themes} type="themes" height={220} />
+                    ) : (
+                      <div className="space-y-4">
+                        {trends.themes.slice(0, 5).map((theme: Theme, index: number) => (
+                          <TrendCard 
+                            key={theme.name}
+                            name={theme.name}
+                            value={theme.popularity}
+                            rank={index + 1}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                {/* ビジュアルスタイル */}
+                <div className="trend-card">
+                  <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow h-full">
+                    <h2 className="text-xl font-semibold mb-4">人気スタイル</h2>
+                    <div className="space-y-4">
+                      {trends.visualStyles.slice(0, 5).map((style: VisualStyle, index: number) => (
+                        <TrendCard 
+                          key={style.name}
+                          name={style.name}
+                          value={index === 0 ? 1 : 1 - (index * 0.15)}
+                          rank={index + 1}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* カラーパレット */}
+                <div className="col-span-1 md:col-span-3">
+                  <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                    <h2 className="text-xl font-semibold mb-4">トレンドカラーパレット</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      {trends.colorPalettes.slice(0, 3).map((palette: ColorPalette) => (
+                        <ColorPaletteDisplay
+                          key={palette.name}
+                          name={palette.name}
+                          colors={palette.colors}
+                        />
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
-              
-              {/* ビジュアルスタイル */}
-              <div className="trend-card">
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow h-full">
-                  <h2 className="text-xl font-semibold mb-4">人気スタイル</h2>
-                  <div className="space-y-4">
-                    {trends.visualStyles.slice(0, 5).map((style: VisualStyle, index: number) => (
-                      <TrendCard 
-                        key={style.name}
-                        name={style.name}
-                        value={index === 0 ? 1 : 1 - (index * 0.15)}
-                        rank={index + 1}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
-              
-              {/* カラーパレット */}
-              <div className="col-span-1 md:col-span-3">
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-                  <h2 className="text-xl font-semibold mb-4">トレンドカラーパレット</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {trends.colorPalettes.slice(0, 3).map((palette: ColorPalette) => (
-                      <ColorPaletteDisplay
-                        key={palette.name}
-                        name={palette.name}
-                        colors={palette.colors}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
+            </>
           )}
         </div>
       )}

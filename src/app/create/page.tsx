@@ -15,10 +15,12 @@ export default function CreatePage() {
   
   const [step, setStep] = useState<'template' | 'create' | 'confirm' | 'success'>('template');
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+  const [templateData, setTemplateData] = useState<any | null>(null);
   const [content, setContent] = useState<File | null>(null);
   
-  const handleTemplateSelect = (templateId: string) => {
+  const handleTemplateSelect = (templateId: string, template: any) => {
     setSelectedTemplate(templateId);
+    setTemplateData(template);
     setStep('create');
   };
   

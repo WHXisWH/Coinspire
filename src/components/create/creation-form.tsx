@@ -1,5 +1,3 @@
-'use client';
-
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import Image from 'next/image';
@@ -8,9 +6,12 @@ import { ConnectButton } from '@/components/wallet/connect-button';
 import { useZoraMint, useZoraCreateCoin } from '@/hooks/useZora';
 import { prepareMetadata } from '@/lib/zora';
 import { Address } from 'viem';
+import { ImageEditor } from '@/components/create/image-editor';
+import type { Template } from '@/types/trends';
 
 interface CreationFormProps {
   selectedTemplate?: string | null;
+  templateData?: Template | null;
   onContentUpload: (file: File) => void;
   onSubmit: (data: FormData) => void;
   isLoading: boolean;

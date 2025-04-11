@@ -52,7 +52,7 @@ export async function fetchRecommendations(params?: {
   }
   
   const query = queryParams.toString() ? `?${queryParams.toString()}` : '';
-  const response = await api.get(`/recommendation${query}`);
+  const response = await aiApi.get(`/recommendation${query}`);
   return response.data;
 }
 

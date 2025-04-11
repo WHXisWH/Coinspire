@@ -31,7 +31,7 @@ def require_api_key(f):
     return decorated_function
 
 # トレンド分析エンドポイント
-@app.route('/trends', methods=['GET'])
+@app.route('/api/trends', methods=['GET'])
 @require_api_key
 def get_trends():
     # 実際の実装では、外部データソースからのデータ取得や
@@ -79,7 +79,7 @@ def get_trends():
     return jsonify(trends)
 
 # レコメンデーションエンドポイント
-@app.route('/recommendation', methods=['GET'])
+@app.route('/api/recommendation', methods=['GET'])
 @require_api_key
 def get_recommendation():
     # クエリパラメータから条件を取得

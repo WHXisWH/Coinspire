@@ -8,7 +8,7 @@ from suggest.template import generate_templates
 from suggest.prompt import generate_prompts
 
 app = Flask(__name__)
-CORS(app)  # クロスオリジンリクエストを許可
+CORS(app, resources={r"/api/*": {"origins": "https://coinspire.vercel.app"}})
 
 # 環境変数からAPIキーを取得
 API_KEY = os.environ.get('AI_SERVICE_API_KEY')

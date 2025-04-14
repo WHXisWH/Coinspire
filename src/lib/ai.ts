@@ -3,11 +3,10 @@ import type { TrendAnalysis } from '@/types/trends';
 
 // AIサービスURL
 const AI_SERVICE_URL = 
-  process.env.NEXT_PUBLIC_AI_SERVICE_URL || 
-  (typeof window !== 'undefined' ? '/api' : 'http://localhost:5000');
+  process.env.NEXT_PUBLIC_AI_SERVICE_URL || 'https://coinspire.onrender.com';
 
 // AIサービスタイムアウト (ms)
-const AI_SERVICE_TIMEOUT = parseInt(process.env.AI_SERVICE_TIMEOUT || '5000', 10);
+const AI_SERVICE_TIMEOUT = parseInt(process.env.AI_SERVICE_TIMEOUT || '60000', 10);
 
 // AIサービスAPIキー
 const AI_SERVICE_API_KEY = process.env.AI_SERVICE_API_KEY;

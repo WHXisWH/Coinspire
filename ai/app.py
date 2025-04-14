@@ -117,11 +117,42 @@ def get_recommendation():
     }
     
     return jsonify(recommendations)
+
+@app.route('/api/templates', methods=['GET'])
+@require_api_key
+def get_templates():
+    # クエリパラメータまたはデフォルトモックを使って生成
+    keywords = [
+        {"text": "NFT", "value": 30},
+        {"text": "メタバース", "value": 25},
+        {"text": "デジタルアート", "value": 20},
+        {"text": "ブロックチェーン", "value": 15}
+    ]
     
+    themes = [
+        {"name": "サイバーパンク", "popularity": 0.8},
+        {"name": "ファンタジー", "popularity": 0.7},
+        {"name": "未来都市", "popularity": 0.6}
+    ]
+    
+    styles = [
+        {"name": "ピクセルアート", "score": 0.9},
+        {"name": "3Dレンダリング", "score": 0.8},
+        {"name": "アニメ風", "score": 0.7}
+    ]
+    
+    palettes = [
+        {"name": "ネオン", "colors": ["#FF00FF", "#00FFFF", "#FFFF00", "#FF00AA"]},
+        {"name": "パステル", "colors": ["#FFD1DC", "#FFECF1", "#A2D2FF", "#EFD3FF"]}
+    ]
+    
+    templates = generate_templates(keywords, themes, styles, palettes, count=5)
+    return jsonify(templates)
+
 @app.route('/')
 def index():
     return jsonify({"message": "Welcome to Coinspire API. Use /api/* endpoints."})
     
 if __name__ == "__main__":
-    port = int(os.environ.get('PORT', 10000))  # デフォルト10000でもOK
+    port = int(os.environ.get('PORT', 10000))
     app.run(debug=True, host='0.0.0.0', port=port)

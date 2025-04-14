@@ -123,5 +123,5 @@ def index():
     return jsonify({"message": "Welcome to Coinspire API. Use /api/* endpoints."})
     
 if __name__ == "__main__":
-    port = int(os.environ.get('PORT', 5000))  # Vercelなどの環境変数からポートを取得
+    port = int(os.environ.get('PORT', 10000))  # デフォルト10000でもOK
     app.run(debug=True, host='0.0.0.0', port=port)

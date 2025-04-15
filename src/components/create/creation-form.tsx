@@ -167,9 +167,9 @@ const submitForm = async (data: FormData) => {
         onSubmit(data);
       }
     } catch (error) {
-      console.error('Error creating coin:', error);
-      setError(error instanceof Error ? error.message : 'コインの作成中に予期しないエラーが発生しました');
-      setStep('form');
+  console.error('Error creating coin:', error);
+  setInternalError(error instanceof Error ? error.message : 'コインの作成中に予期しないエラーが発生しました');
+  setStep('form');
     }
   };
   

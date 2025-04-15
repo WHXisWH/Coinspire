@@ -1,18 +1,18 @@
 import axios, { AxiosRequestConfig } from 'axios';
-import type { TrendAnalysis } from '@/types/trends';
+import type { TrendAnalysis, Template } from '@/types/trends';
 
 // AIサービスURL
 const AI_SERVICE_URL = 
   process.env.NEXT_PUBLIC_AI_SERVICE_URL || 'https://coinspire.onrender.com';
 
 // AIサービスタイムアウト (ms)
-const AI_SERVICE_TIMEOUT = parseInt(process.env.AI_SERVICE_TIMEOUT || '60000', 10);
+const AI_SERVICE_TIMEOUT = parseInt(process.env.AI_SERVICE_TIMEOUT || '15000', 10);
 
 // AIサービスAPIキー
 const AI_SERVICE_API_KEY = process.env.AI_SERVICE_API_KEY;
 
 // モック機能フラグ
-const ENABLE_MOCK_DATA = process.env.NEXT_PUBLIC_ENABLE_MOCK_DATA === 'true';
+const ENABLE_MOCK_DATA = process.env.NEXT_PUBLIC_ENABLE_MOCK_DATA !== 'false';
 
 // AIサービス用Axiosインスタンス
 const aiClient = axios.create({
@@ -40,15 +40,23 @@ aiClient.interceptors.response.use(
  */
 export async function fetchTrendsFromAI(): Promise<TrendAnalysis> {
   try {
+    // First try local API endpoint
+    try {
+      const response = await fetch('/api/trends');
+      if (response.ok) {
+        return await response.json();
+      }
+    } catch (localError) {
+      console.log('Local API error, falling back to direct service', localError);
+    }
+    
+    // Then try direct AI service
     const response = await aiClient.get('/trends');
     return response.data;
   } catch (error) {
     console.error('Error fetching trends from AI service:', error);
-    if (ENABLE_MOCK_DATA) {
-      console.log('Falling back to mock data');
-      return getMockTrendData();
-    }
-    throw error;
+    // Always return mock data on error to prevent UI breakage
+    return getMockTrendData();
   }
 }
 
@@ -77,15 +85,55 @@ export async function fetchRecommendationsFromAI(options: {
   }
   
   try {
+    // First try local API endpoint
+    try {
+      const queryString = new URLSearchParams(params).toString();
+      const response = await fetch(`/api/recommendation?${queryString}`);
+      if (response.ok) {
+        return await response.json();
+      }
+    } catch (localError) {
+      console.log('Local API error, falling back to direct service', localError);
+    }
+    
+    // Then try direct AI service
     const response = await aiClient.get('/recommendation', { params });
     return response.data;
   } catch (error) {
     console.error('Error fetching recommendations from AI service:', error);
-    if (ENABLE_MOCK_DATA) {
-      console.log('Falling back to mock recommendation data');
-      return getMockRecommendationData(options);
+    // Always return mock data on error
+    return getMockRecommendationData(options);
+  }
+}
+
+/**
+ * テンプレートを取得
+ * @returns テンプレート配列
+ */
+export async function fetchTemplatesFromAI(options: {
+  keywords?: string[];
+  themes?: string[];
+  count?: number;
+} = {}): Promise<Template[]> {
+  try {
+    // First try local API endpoint
+    try {
+      const response = await fetch('/api/templates');
+      if (response.ok) {
+        const data = await response.json();
+        return data || [];
+      }
+    } catch (localError) {
+      console.log('Local API error, falling back to direct service', localError);
     }
-    throw error;
+    
+    // Then try direct AI service
+    const response = await aiClient.get('/templates');
+    return response.data || [];
+  } catch (error) {
+    console.error('Error fetching templates from AI service:', error);
+    // Return mock templates on error
+    return getMockTemplates(options);
   }
 }
 
@@ -144,28 +192,81 @@ function getMockRecommendationData(options: {
   const keywordsText = options.keywords?.join(', ') || 'NFT, Web3, クリプトアート';
   
   return {
-    templates: [
-      {
-        id: 'template-cyber-1',
-        name: `${style} デザイン`,
-        description: '鮮やかな色彩とテクノロジー感あふれるデザイン',
-        imageUrl: '/images/templates/cyber-1.png',
-        tags: ['サイバー', '未来的', 'テック'],
-        aiPrompt: `サイバーパンクな世界、${keywordsText}、ネオンの光、未来都市`
-      },
-      {
-        id: 'template-abstract-1',
-        name: `抽象的 アート`,
-        description: '幾何学的な形状と複雑なパターンを用いた抽象的なデザイン',
-        imageUrl: '/images/templates/abstract-1.png',
-        tags: ['抽象', 'パターン', 'カラフル'],
-        aiPrompt: `抽象的なデジタルアート、${keywordsText}、幾何学模様、波状のパターン`
-      }
-    ],
+    templates: getMockTemplates({ 
+      keywords: options.keywords, 
+      count: options.count
+    }),
     prompts: [
       `サイバーパンクな都市風景、ネオンの光、${keywordsText}、高層ビル、未来的`,
       `抽象的な${style}アート、鮮やかな色彩、${keywordsText}、流動的なフォルム`,
       `${style}風の風景、デジタルアート、${keywordsText}、高品質、詳細`
     ]
   };
+}
+
+/**
+ * モックテンプレートを生成
+ */
+function getMockTemplates(options: {
+  keywords?: string[];
+  themes?: string[];
+  count?: number;
+} = {}): Template[] {
+  const count = options.count || 5;
+  const keywordsText = options.keywords?.join(', ') || 'NFT, Web3, クリプトアート';
+  
+  // テンプレートのベースセット
+  const templates: Template[] = [
+    {
+      id: 'template-cyber-1',
+      name: 'サイバーパンク デザイン',
+      description: '鮮やかな色彩とテクノロジー感あふれるデザイン',
+      imageUrl: '/images/templates/cyber-1.png',
+      tags: ['サイバーパンク', '未来的', 'テック'],
+      aiPrompt: `サイバーパンクな世界、${keywordsText}、ネオンの光、未来都市`
+    },
+    {
+      id: 'template-abstract-1',
+      name: '抽象的 アート',
+      description: '幾何学的な形状と複雑なパターンを用いた抽象的なデザイン',
+      imageUrl: '/images/templates/abstract-1.png',
+      tags: ['抽象', 'パターン', 'カラフル'],
+      aiPrompt: `抽象的なデジタルアート、${keywordsText}、幾何学模様、波状のパターン`
+    },
+    {
+      id: 'template-anime-1',
+      name: 'アニメ風 イラスト',
+      description: '日本のアニメスタイルを取り入れたカラフルなイラスト',
+      imageUrl: '/images/templates/anime-1.png',
+      tags: ['アニメ', 'イラスト', 'カラフル'],
+      aiPrompt: `アニメスタイルのイラスト、${keywordsText}、鮮やかな色彩、2Dスタイル`
+    },
+    {
+      id: 'template-minimal-1',
+      name: 'ミニマル デザイン',
+      description: 'シンプルで洗練されたミニマルデザイン',
+      imageUrl: '/images/templates/minimal-1.png',
+      tags: ['ミニマル', 'シンプル', '洗練'],
+      aiPrompt: `ミニマルなデザイン、${keywordsText}、シンプル、余白、少ない色`
+    },
+    {
+      id: 'template-retro-1',
+      name: 'レトロ スタイル',
+      description: '80年代や90年代を思わせるレトロなデザイン',
+      imageUrl: '/images/templates/retro-1.png',
+      tags: ['レトロ', 'ビンテージ', 'ノスタルジック'],
+      aiPrompt: `レトロスタイル、${keywordsText}、80年代、ビンテージ感、ノスタルジック`
+    },
+    {
+      id: 'template-pixel-1',
+      name: 'ピクセルアート スタイル',
+      description: 'ドット絵風のピクセルアートスタイル',
+      imageUrl: '/images/templates/pixel-1.png',
+      tags: ['ピクセルアート', 'レトロゲーム', '8ビット'],
+      aiPrompt: `ピクセルアート、${keywordsText}、ドット絵、8ビットスタイル、レトロゲーム`
+    }
+  ];
+  
+  // 必要な数だけ返す
+  return templates.slice(0, Math.min(count, templates.length));
 }

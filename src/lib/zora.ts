@@ -1,144 +1,263 @@
-import { 
-  createCoin, 
-  createCoinCall,
-  getCoinCreateFromLogs,
-  setApiKey,
-  validateMetadataJSON
-} from "@zoralabs/coins-sdk";
-import type { CreateCoinParams, CoinDetails } from "@/types/zora";
-import { uploadToIPFS, uploadJSONToIPFS } from './ipfs';
-import { Address } from "viem";
+import { useState, useEffect } from 'react';
+import { usePublicClient, useWalletClient, useSimulateContract, useWriteContract } from 'wagmi';
+import type { Config } from 'wagmi';
+import { createContentCoin } from '@/lib/zora';
+import { createCoinCall } from "@zoralabs/coins-sdk";
+import type { Address, SimulateContractParameters, Chain, Account } from 'viem';
+import type { CreateCoinParams } from '@/types/zora';
+import useSWR from 'swr';
 
-// APIキーがあれば設定する
-if (process.env.ZORA_API_KEY) {
-  setApiKey(process.env.ZORA_API_KEY);
-}
 
-// メタデータ準備
-export async function prepareMetadata(
-  content: File | Blob,
-  title: string,
-  description: string
-): Promise<string> {
-  // コンテンツをIPFSにアップロード
-  const contentCID = await uploadToIPFS(content);
-  
-  // メタデータJSONを作成
-  const metadata = {
-    name: title,
-    description: description,
-    image: `ipfs://${contentCID}`,
-    content: {
-      mime: content.type,
-      uri: `ipfs://${contentCID}`
-    },
-    properties: {
-      category: "social" // カテゴリを追加（EIP-7572準拠）
+export function useZoraMint() {
+  const { data: walletClient } = useWalletClient();
+  const publicClient = usePublicClient();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<{ success: boolean; hash?: string; address?: Address } | null>(null);
+
+  const mint = async (
+    content: File,
+    title: string,
+    symbol: string,
+    description: string,
+    creatorAddress: Address
+  ) => {
+    if (!walletClient || !walletClient.account || !publicClient) {
+      setError('ウォレットが接続されていません。ウォレットを接続してからもう一度お試しください。'); 
+      return null;
+    }
+    
+    // 入力検証
+    if (!content) {
+      setError('コンテンツファイルが選択されていません');
+      return null;
+    }
+    
+    if (!title || !symbol || !description) {
+      setError('コイン情報が不完全です。タイトル、シンボル、説明文を入力してください。');
+      return null;
+    }
+    
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      console.log('Creating coin with parameters:', {
+        title,
+        symbol, 
+        description,
+        creatorAddress
+      });
+      
+      const mintResult = await createContentCoin(
+        walletClient,
+        publicClient,
+        {
+          content,
+          title,
+          symbol,
+          description,
+          creatorAddress,
+        }
+      );
+      
+      console.log('Mint result:', mintResult);
+      
+      if (!mintResult.success && mintResult.error) {
+        setError(mintResult.error);
+        return null;
+      }
+      
+      setResult(mintResult);
+      return mintResult;
+    } catch (err: any) {
+      console.error('Error in mint function:', err);
+      const errorMessage = err.message || 'コインの作成中にエラーが発生しました'; 
+      setError(errorMessage);
+      return null;
+    } finally {
+      setIsLoading(false);
     }
   };
-  
-  // メタデータをバリデーション
-  try {
-    validateMetadataJSON(metadata);
-  } catch (error) {
-    console.error("Metadata validation error:", error);
-    throw new Error("メタデータが無効です: " + (error as Error).message);
-  }
-  
-  // メタデータJSONをIPFSにアップロード
-  const metadataCID = await uploadJSONToIPFS(metadata);
-  
-  return `ipfs://${metadataCID}`;
+
+  return {
+    mint,
+    isLoading,
+    error,
+    result,
+  };
 }
 
-// Coin作成関数
-export async function createContentCoin(
-  walletClient: any, 
-  publicClient: any, 
-  contentData: {
-    content: File | Blob;
-    title: string;
-    symbol: string;
-    description: string;
-    creatorAddress: Address;
-  }
-): Promise<{
-  success: boolean;
-  hash?: string;
-  address?: Address;
-  error?: string;
-}> {
-  const { content, title, symbol, description, creatorAddress } = contentData;
-  
-  try {
-    // メタデータを準備
-    const metadataURI = await prepareMetadata(content, title, description);
-    
-    // Coinの作成パラメータ設定
-    const createCoinParams: CreateCoinParams = {
-      name: title,
-      symbol: symbol,  // $記号は不要、SDKが処理
-      uri: metadataURI,
-      payoutRecipient: creatorAddress,
-      // プラットフォーム報酬を受け取るためのアドレス
-      platformReferrer: process.env.NEXT_PUBLIC_PLATFORM_REFERRER_ADDRESS as Address || undefined,
-    };
-    
-    // Coin作成トランザクション実行
-    const result = await createCoin(createCoinParams, walletClient, publicClient);
-    console.log('✅ createCoin result:', result);
-    
-    return {
-      success: true,
-      hash: result.hash,
-      address: result.address
-    };
-  } catch (error: any) {
-    console.error("Error creating coin:", error);
-    return {
-      success: false,
-      error: error.message
-    };
-  }
-}
 
-// トランザクション結果からコインアドレスを取得
-export function extractCoinAddressFromReceipt(receipt: any): Address | undefined {
-  const coinDeployment = getCoinCreateFromLogs(receipt);
-  return coinDeployment?.coin;
-}
+export function useZoraCreateCoin() {
+  const [coinParams, setCoinParams] = useState<CreateCoinParams | null>(null);
+  const [simulateConfig, setSimulateConfig] = useState<SimulateContractParameters | undefined>(undefined);
+  const [error, setError] = useState<Error | null>(null);
 
-// Zoraから取得できる実際のコインデータをAPIから取得
-export async function fetchCoinsData(endpoint: string, params?: Record<string, string>): Promise<CoinDetails[]> {
-  try {
-    const queryParams = new URLSearchParams(params);
-    const apiUrl = `${endpoint}?${queryParams.toString()}`;
-    
-    const response = await fetch(apiUrl);
-    
-    if (!response.ok) {
-      throw new Error(`API request failed: ${response.status}`);
+  useEffect(() => {
+    if (!coinParams) {
+      setSimulateConfig(undefined);
+      return;
     }
-    
-    const data = await response.json();
-    return data.coins || [];
-  } catch (error) {
-    console.error(`Error fetching data from ${endpoint}:`, error);
-    return [];
-  }
+    let isMounted = true;
+
+    (async () => {
+      try {
+        console.log('Preparing coin creation with params:', coinParams);
+        
+        const callResult = await createCoinCall(coinParams);
+        console.log("createCoinCall result:", callResult);
+
+        if (callResult && callResult.address && callResult.abi && callResult.functionName && callResult.args) {
+            const configForSimulate: SimulateContractParameters = {
+              address: callResult.address,
+              abi: callResult.abi,
+              functionName: callResult.functionName,
+              args: callResult.args,
+            };
+
+
+            if (coinParams.initialPurchaseWei) {
+              configForSimulate.value = coinParams.initialPurchaseWei;
+            }
+
+            if (isMounted) {
+              setSimulateConfig(configForSimulate);
+              setError(null);
+            }
+        } else {
+            console.error("Failed to construct simulate config: Missing required properties from createCoinCall result or callResult is null/undefined", callResult);
+            if (isMounted) {
+              setSimulateConfig(undefined);
+              setError(new Error("コイン作成の準備に失敗しました。必要なパラメータが不足しています。"));
+            }
+        }
+
+      } catch (err) {
+        console.error("createCoinCall failed:", err);
+         if (isMounted) {
+           setSimulateConfig(undefined);
+           setError(err instanceof Error ? err : new Error("コイン作成の準備中にエラーが発生しました"));
+         }
+      }
+    })();
+
+    return () => {
+        isMounted = false;
+    };
+  }, [coinParams]);
+
+  const { data: simulateData, error: simulateError } = useSimulateContract(simulateConfig);
+  const { writeContract, status, data: txData, error: writeError } = useWriteContract();
+
+  useEffect(() => {
+      if (simulateError) {
+          console.error("Simulation Error:", simulateError);
+          setError(simulateError);
+      }
+      if (writeError) {
+          console.error("Write Contract Error:", writeError);
+          setError(writeError);
+      }
+  }, [simulateError, writeError]);
+
+  const prepareCoin = (params: CreateCoinParams) => {
+    console.log('Preparing coin with parameters:', params);
+    setCoinParams(params);
+  };
+
+  const createCoin = () => {
+    if (simulateData?.request && writeContract) {
+      console.log('Executing coin creation with simulation data:', simulateData.request);
+      writeContract(simulateData.request);
+    } else {
+        
+        if (simulateError) {
+             console.error("Cannot create coin due to simulation error:", simulateError);
+             setError(simulateError);
+        } else {
+             const errorMsg = "コイン作成のシミュレーションに失敗しました。パラメータを確認してください。";
+             console.error(errorMsg, { simulateData, writeContractAvailable: !!writeContract });
+             setError(new Error(errorMsg));
+        }
+    }
+  };
+
+  return {
+    prepareCoin,
+    createCoin,
+    isLoading: status === 'pending' || (!!coinParams && !simulateConfig && !simulateError),
+    isSimulating: !!coinParams && !simulateConfig && !simulateError,
+    isConfirming: status === 'pending',
+    isSuccess: status === 'success',
+    transactionData: txData,
+    error: error || simulateError || writeError,
+  };
 }
 
-// トレンドコイン取得 (APIが利用可能な場合実装)
-export async function getTrendingCoins(count = 10): Promise<CoinDetails[]> {
-  return fetchCoinsData('/api/coins/trending', { count: count.toString() });
+
+export function useTrendingCoins(count = 10) {
+    const fetcher = async (url: string) => {
+      try {
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error('トレンドコインの取得に失敗しました');
+        }
+        const data = await response.json();
+        return data.coins || [];
+      } catch (error) {
+        console.error('Error fetching trending coins:', error);
+        return [];
+      }
+    };
+
+    const { data, error, isLoading, mutate } = useSWR(
+      `/api/coins/trending?count=${count}`,
+      fetcher,
+      {
+        refreshInterval: 60000,
+        fallbackData: [],
+        revalidateOnFocus: false,
+      }
+    );
+
+    return {
+      coins: data || [],
+      isLoading,
+      error,
+      refresh: mutate
+    };
 }
 
-// 新着コイン取得 (APIが利用可能な場合実装)
-export async function getNewCoins(count = 10): Promise<CoinDetails[]> {
-  return fetchCoinsData('/api/coins/new', { count: count.toString() });
-}
+export function useNewCoins(count = 10) {
+    const fetcher = async (url: string) => {
+      try {
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error('新着コインの取得に失敗しました');
+        }
+        const data = await response.json();
+        return data.coins || [];
+      } catch (error) {
+        console.error('Error fetching new coins:', error);
+        return [];
+      }
+    };
 
-// ユーザーのコイン残高を取得
-export async function getUserCoins(address: string): Promise<CoinDetails[]> {
-  return fetchCoinsData('/api/coins/user', { address });
+    const { data, error, isLoading, mutate } = useSWR(
+      `/api/coins/new?count=${count}`,
+      fetcher,
+      {
+        refreshInterval: 60000,
+        fallbackData: [],
+        revalidateOnFocus: false,
+      }
+    );
+
+    return {
+      coins: data || [],
+      isLoading,
+      error,
+      refresh: mutate
+    };
 }

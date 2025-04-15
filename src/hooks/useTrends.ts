@@ -1,8 +1,6 @@
 import useSWR from 'swr';
 import type { TrendAnalysis } from '@/types/trends';
-
-// API URLの設定
-const API_URL = '/api/trends';
+import { fetchTrends } from '@/utils/api';
 
 // 静的なフォールバックデータ
 const fallbackTrends: TrendAnalysis = {
@@ -28,46 +26,19 @@ const fallbackTrends: TrendAnalysis = {
   ]
 };
 
-// SWR用フェッチャー関数
-const fetcher = async (url: string) => {
-  try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`API error: ${response.status}`);
-    }
-    return await response.json();
-  } catch (error) {
-    console.error('Error fetching data:', error);
-    // エラー時はフォールバックデータを返す
-    if (url.includes('/trends')) {
-      return fallbackTrends;
-    }
-    // その他のURLの場合はエラーを投げる
-    throw error;
-  }
-};
-
 /**
  * トレンドデータを取得するためのカスタムフック
  */
 export function useTrends() {
-  const { data, error, isLoading, mutate } = useSWR(API_URL, fetcher, {
-    // 30分ごとに再検証
-    refreshInterval: 30 * 60 * 1000,
-    // 最大24時間キャッシュ
-    dedupingInterval: 24 * 60 * 60 * 1000,
-    // 失敗時の再試行設定
+  const { data, error, isLoading, mutate } = useSWR('/api/trends', fetchTrends, {
+    refreshInterval: 30 * 60 * 1000, // 30分
+    dedupingInterval: 24 * 60 * 60 * 1000, // 最大24時間
     onErrorRetry: (error, key, config, revalidate, { retryCount }) => {
-      // 3回まで再試行
       if (retryCount >= 3) return;
-      // 5秒後に再試行
       setTimeout(() => revalidate({ retryCount }), 5000);
     },
-    // フォーカス時に再検証しない
     revalidateOnFocus: false,
-    // エラーが起きても古いデータは表示
     keepPreviousData: true,
-    // 初期値としてのフォールバックデータ
     fallbackData: fallbackTrends
   });
 
@@ -83,30 +54,33 @@ export function useTrends() {
  * レコメンデーションを取得するためのカスタムフック
  */
 export function useRecommendations(keywords?: string[], style?: string) {
-  // クエリパラメータ構築
   const queryParams = new URLSearchParams();
-  
-  if (keywords && keywords.length > 0) {
+
+  if (keywords?.length) {
     queryParams.set('keywords', keywords.join(','));
   }
-  
+
   if (style) {
     queryParams.set('style', style);
   }
-  
+
   const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
   const apiUrl = `/api/recommendation${queryString}`;
-  
+
   const { data, error, isLoading } = useSWR(
     keywords || style ? apiUrl : null,
-    fetcher,
+    async (url: string) => {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`API error: ${response.status}`);
+      return await response.json();
+    },
     {
       keepPreviousData: true,
       revalidateOnFocus: false,
       fallbackData: { templates: [], prompts: [] }
     }
   );
-  
+
   return {
     recommendations: data || { templates: [], prompts: [] },
     isLoading,

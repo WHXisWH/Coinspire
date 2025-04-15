@@ -45,9 +45,9 @@ export function CreationForm({
   
   // どちらのミント方法を使うか
   const [useDirectMint, setUseDirectMint] = useState(true);
-  
+  const [internalError, setInternalError] = useState<string | null>(null);
   const isLoading = propIsLoading || mintLoading || createCoinLoading;
-  const error = propError || mintError;
+  const error = propError || mintError || internalError;
   
   const {
     register,
@@ -104,13 +104,14 @@ export function CreationForm({
     onContentUpload(file);
   };
   
-  const submitForm = async (data: FormData) => {
+const submitForm = async (data: FormData) => {
     if (!previewUrl) {
       setFileError('画像ファイルをアップロードしてください');
       return;
     }
     
     if (!address) {
+      setInternalError('ウォレットが接続されていません。ウォレットを接続してからもう一度お試しください。');
       return;
     }
     
@@ -126,6 +127,12 @@ export function CreationForm({
     }
     
     try {
+      console.log('Creating coin with data:', {
+        title: data.title,
+        symbol: data.symbol,
+        description: data.description,
+      });
+      
       if (useDirectMint) {
         // 直接mintを使用する方法
         const mintResult = await mint(
@@ -140,6 +147,8 @@ export function CreationForm({
           setStep('success');
           onSubmit(data);
         } else {
+          console.error('Mint failure:', mintResult);
+          setInternalError(mintResult?.error || 'コインの作成に失敗しました。ネットワーク接続を確認してください。');
           setStep('form');
         }
       } else {
@@ -159,6 +168,7 @@ export function CreationForm({
       }
     } catch (error) {
       console.error('Error creating coin:', error);
+      setError(error instanceof Error ? error.message : 'コインの作成中に予期しないエラーが発生しました');
       setStep('form');
     }
   };

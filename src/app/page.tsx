@@ -147,21 +147,25 @@ export default function Home() {
           <h2 className="text-3xl md:text-4xl font-bold mb-6">創作とトークン化の新しい時代へ</h2>
           <p className="text-xl mb-8 text-white/90">
             トレンドを分析し、創作を支援し、収益化を実現する。Coinspireで新しいクリエイターエコノミーの扉を開きましょう。
+            <br />
+            <a 
+              href="https://zora.co" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="underline text-white hover:text-white/80"
+            >
+              ZORAについてはこちら
+            </a>
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="text-center mt-6">
             <Link 
               href="/dashboard" 
-              className="px-8 py-3 rounded-lg font-medium text-lg bg-white text-primary-600 hover:bg-white/90 transition-colors"
+              className="btn-primary px-8 py-3 rounded-lg font-medium text-lg inline-flex items-center"
             >
               無料で始める
-            </Link>
-            <Link 
-              href="https://zora.co" 
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-8 py-3 rounded-lg font-medium text-lg bg-transparent border border-white text-white hover:bg-white/10 transition-colors"
-            >
-              ZORAについて詳しく
+              <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+              </svg>
             </Link>
           </div>
         </div>

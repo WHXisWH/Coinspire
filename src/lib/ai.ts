@@ -6,7 +6,7 @@ const AI_SERVICE_URL =
   process.env.NEXT_PUBLIC_AI_SERVICE_URL || 'https://coinspire.onrender.com';
 
 // AIサービスタイムアウト (ms)
-const AI_SERVICE_TIMEOUT = parseInt(process.env.AI_SERVICE_TIMEOUT || '15000', 10);
+const AI_SERVICE_TIMEOUT = parseInt(process.env.AI_SERVICE_TIMEOUT || '30000', 10);
 
 // AIサービスAPIキー
 const AI_SERVICE_API_KEY = process.env.AI_SERVICE_API_KEY;
@@ -29,7 +29,6 @@ aiClient.interceptors.response.use(
   response => response,
   error => {
     console.error('AI Service Error:', error.message || 'Unknown error');
-    // エラーを再スローして、呼び出し元で適切に処理できるようにする
     return Promise.reject(error);
   }
 );
@@ -40,22 +39,10 @@ aiClient.interceptors.response.use(
  */
 export async function fetchTrendsFromAI(): Promise<TrendAnalysis> {
   try {
-    // First try local API endpoint
-    try {
-      const response = await fetch('/api/trends');
-      if (response.ok) {
-        return await response.json();
-      }
-    } catch (localError) {
-      console.log('Local API error, falling back to direct service', localError);
-    }
-    
-    // Then try direct AI service
     const response = await aiClient.get('/trends');
     return response.data;
   } catch (error) {
     console.error('Error fetching trends from AI service:', error);
-    // Always return mock data on error to prevent UI breakage
     return getMockTrendData();
   }
 }
@@ -85,23 +72,10 @@ export async function fetchRecommendationsFromAI(options: {
   }
   
   try {
-    // First try local API endpoint
-    try {
-      const queryString = new URLSearchParams(params).toString();
-      const response = await fetch(`/api/recommendation?${queryString}`);
-      if (response.ok) {
-        return await response.json();
-      }
-    } catch (localError) {
-      console.log('Local API error, falling back to direct service', localError);
-    }
-    
-    // Then try direct AI service
     const response = await aiClient.get('/recommendation', { params });
     return response.data;
   } catch (error) {
     console.error('Error fetching recommendations from AI service:', error);
-    // Always return mock data on error
     return getMockRecommendationData(options);
   }
 }
@@ -116,23 +90,10 @@ export async function fetchTemplatesFromAI(options: {
   count?: number;
 } = {}): Promise<Template[]> {
   try {
-    // First try local API endpoint
-    try {
-      const response = await fetch('/api/templates');
-      if (response.ok) {
-        const data = await response.json();
-        return data || [];
-      }
-    } catch (localError) {
-      console.log('Local API error, falling back to direct service', localError);
-    }
-    
-    // Then try direct AI service
-    const response = await aiClient.get('/templates');
+    const response = await aiClient.get('/templates', { params: options });
     return response.data || [];
   } catch (error) {
     console.error('Error fetching templates from AI service:', error);
-    // Return mock templates on error
     return getMockTemplates(options);
   }
 }
@@ -215,7 +176,6 @@ function getMockTemplates(options: {
   const count = options.count || 5;
   const keywordsText = options.keywords?.join(', ') || 'NFT, Web3, クリプトアート';
   
-  // テンプレートのベースセット
   const templates: Template[] = [
     {
       id: 'template-cyber-1',
@@ -267,6 +227,5 @@ function getMockTemplates(options: {
     }
   ];
   
-  // 必要な数だけ返す
   return templates.slice(0, Math.min(count, templates.length));
 }

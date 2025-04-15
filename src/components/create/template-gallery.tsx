@@ -220,6 +220,8 @@ export function TemplateGallery({ trends, onSelect }: TemplateGalleryProps) {
               <p className="text-gray-600 dark:text-gray-400 text-sm mb-3">
                 {template.description}
               </p>
+
+              <div className="text-xs text-red-500">{template.imageUrl}</div>
               
               <div className="flex flex-wrap gap-1 mt-2">
                 {template.tags && template.tags.map((tag: string) => (

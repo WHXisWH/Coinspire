@@ -86,6 +86,7 @@ export async function createContentCoin(
     
     // Coin作成トランザクション実行
     const result = await createCoin(createCoinParams, walletClient, publicClient);
+    console.log('✅ createCoin result:', result);
     
     return {
       success: true,

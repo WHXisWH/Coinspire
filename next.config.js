@@ -2,12 +2,13 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    unoptimized: true, // ← ✅ これを追加
+    unoptimized: true,
     domains: [
       'nftstorage.link',
       'ipfs.io',
       'cloudflare-ipfs.com',
       'example.com', // For mock data during development
+      'placehold.co', // For placeholder images
     ],
     remotePatterns: [
       {
@@ -31,7 +32,19 @@ const nextConfig = {
     }
     return [];
   },
+  // 静的アセットへのフォールバック有効化
+  async headers() {
+    return [
+      {
+        source: '/images/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+    ];
+  },
   output: 'standalone',
 };
-
-module.exports = nextConfig;

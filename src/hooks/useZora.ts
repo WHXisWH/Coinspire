@@ -22,7 +22,7 @@ export function useZoraMint() {
     description: string,
     creatorAddress: Address
   ) => {
-    if (!walletClient || !publicClient) {
+    if (!walletClient || !walletClient.account || !publicClient) {
       setError('Wallet not connected'); 
       return null;
     }

@@ -3,7 +3,7 @@ import type { TrendAnalysis, Template } from '@/types/trends';
 
 // AIサービスURL
 const AI_SERVICE_URL = 
-  process.env.NEXT_PUBLIC_AI_SERVICE_URL || 'https://coinspire.onrender.com';
+  process.env.NEXT_PUBLIC_AI_SERVICE_URL || 'https://coinspire.onrender.com/api';
 
 // AIサービスタイムアウト (ms)
 const AI_SERVICE_TIMEOUT = parseInt(process.env.AI_SERVICE_TIMEOUT || '30000', 10);
@@ -29,6 +29,13 @@ aiClient.interceptors.response.use(
   response => response,
   error => {
     console.error('AI Service Error:', error.message || 'Unknown error');
+    console.error('Error details:', error.response || error.request || error);
+    
+    // CORSエラーの特殊処理
+    if (error.message === 'Network Error') {
+      console.warn('Possible CORS issue detected. Using fallback data.');
+    }
+    
     return Promise.reject(error);
   }
 );
@@ -39,10 +46,20 @@ aiClient.interceptors.response.use(
  */
 export async function fetchTrendsFromAI(): Promise<TrendAnalysis> {
   try {
+    // APIの存在確認
+    if (!AI_SERVICE_URL) {
+      console.warn('AI Service URL is not defined. Using mock data.');
+      return getMockTrendData();
+    }
+    
+    console.log('Fetching trends from AI service:', AI_SERVICE_URL);
     const response = await aiClient.get('/trends');
+    console.log('AI service response:', response.status);
+    
     return response.data;
   } catch (error) {
     console.error('Error fetching trends from AI service:', error);
+    console.log('Using mock data as fallback');
     return getMockTrendData();
   }
 }
@@ -72,6 +89,16 @@ export async function fetchRecommendationsFromAI(options: {
   }
   
   try {
+    // フォールバック動作の有効化
+    if (ENABLE_MOCK_DATA) {
+      // モックデータを返す確率を50%に設定(テスト用)
+      if (Math.random() < 0.5) {
+        console.log('Using mock data for testing');
+        return getMockRecommendationData(options);
+      }
+    }
+    
+    console.log('Fetching recommendations from AI service with params:', params);
     const response = await aiClient.get('/recommendation', { params });
     return response.data;
   } catch (error) {
@@ -90,6 +117,7 @@ export async function fetchTemplatesFromAI(options: {
   count?: number;
 } = {}): Promise<Template[]> {
   try {
+    console.log('Fetching templates from AI service with options:', options);
     const response = await aiClient.get('/templates', { params: options });
     return response.data || [];
   } catch (error) {

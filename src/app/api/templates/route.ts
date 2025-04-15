@@ -1,4 +1,4 @@
-// src/app/api/templates/route.ts
+export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from 'next/server';
 import type { Template } from '@/types/trends';
 

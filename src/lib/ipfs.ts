@@ -1,10 +1,5 @@
 import { NFTStorage } from 'nft.storage';
 
-// NFT.Storage クライアント初期化
-const client = new NFTStorage({ 
-  token: process.env.NFT_STORAGE_API_KEY || '' 
-});
-
 /**
  * ファイルをIPFSにアップロード
  * @param file アップロードするファイル
@@ -12,7 +7,14 @@ const client = new NFTStorage({
  */
 export async function uploadToIPFS(file: File | Blob): Promise<string> {
   try {
-    // バイナリファイルをIPFSにアップロード
+    const client = new NFTStorage({ 
+      token: process.env.NFT_STORAGE_API_KEY || '' 
+    });
+
+    if (!process.env.NFT_STORAGE_API_KEY) {
+      console.warn("NFT_STORAGE_API_KEY is missing in environment variables.");
+    }
+
     const cid = await client.storeBlob(file);
     return cid;
   } catch (error) {
@@ -28,10 +30,15 @@ export async function uploadToIPFS(file: File | Blob): Promise<string> {
  */
 export async function uploadJSONToIPFS(json: object): Promise<string> {
   try {
-    // JSONをBlobに変換
+    const client = new NFTStorage({ 
+      token: process.env.NFT_STORAGE_API_KEY || '' 
+    });
+
+    if (!process.env.NFT_STORAGE_API_KEY) {
+      console.warn("NFT_STORAGE_API_KEY is missing in environment variables.");
+    }
+
     const blob = new Blob([JSON.stringify(json)], { type: 'application/json' });
-    
-    // IPFSにアップロード
     const cid = await client.storeBlob(blob);
     return cid;
   } catch (error) {
@@ -47,12 +54,11 @@ export async function uploadJSONToIPFS(json: object): Promise<string> {
  */
 export function ipfsToHttps(ipfsUrl: string): string {
   if (!ipfsUrl) return '';
-  
-  // ipfs://CIDの形式からHTTPSゲートウェイURLに変換
+
   if (ipfsUrl.startsWith('ipfs://')) {
     const cid = ipfsUrl.replace('ipfs://', '');
     return `https://nftstorage.link/ipfs/${cid}`;
   }
-  
+
   return ipfsUrl;
 }

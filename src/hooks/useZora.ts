@@ -1,295 +1,234 @@
 import { useState, useEffect } from 'react';
-import { usePublicClient, useWalletClient, useSimulateContract, useWriteContract } from 'wagmi';
-import type { Config } from 'wagmi';
-import { createContentCoin } from '@/lib/zora';
-import { createCoinCall } from "@zoralabs/coins-sdk";
-import type { Address, SimulateContractParameters, Chain, Account } from 'viem';
+import {
+  usePublicClient,
+  useWalletClient,
+  useSimulateContract,
+  useWriteContract,
+  type SimulateContractParameters,
+} from 'wagmi';
+import type { Address, Hash } from 'viem';
+import {
+  createContentCoin,
+  type MintResult,
+} from '@/lib/zora'; // ← 型エクスポートを想定
+import { createCoinCall } from '@zoralabs/coins-sdk';
 import type { CreateCoinParams } from '@/types/zora';
 import useSWR from 'swr';
 import { getOptimizedGasParams } from '@/utils/gas';
 
+/* ─────────────── useZoraMint ─────────────── */
 
 export function useZoraMint() {
   const { data: walletClient } = useWalletClient();
   const publicClient = usePublicClient();
+
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<{ success: boolean; hash?: string; address?: Address } | null>(null);
+  const [result, setResult] = useState<
+    (MintResult & { address?: Address }) | null
+  >(null);
 
   const mint = async (
     content: File,
     title: string,
     symbol: string,
     description: string,
-    creatorAddress: Address
+    creatorAddress: Address,
   ) => {
+    /* 前提チェック */
     if (!walletClient || !walletClient.account || !publicClient) {
-      setError('ウォレットが接続されていません。ウォレットを接続してからもう一度お試しください。'); 
+      setError('ウォレットが接続されていません。');
       return null;
     }
-    
-    // 入力検証
     if (!content) {
       setError('コンテンツファイルが選択されていません');
       return null;
     }
-    
     if (!title || !symbol || !description) {
-      setError('コイン情報が不完全です。タイトル、シンボル、説明文を入力してください。');
+      setError('タイトル／シンボル／説明を入力してください。');
       return null;
     }
-    
+
     setIsLoading(true);
     setError(null);
 
     try {
-      console.log('Creating coin with parameters:', {
-        title,
-        symbol, 
-        description,
-        creatorAddress
-      });
-      
-      // 最適化されたガスパラメータを取得
-      const gasParams = await getOptimizedGasParams(publicClient);
-      console.log("Using optimized gas parameters:", gasParams);
-      
+      const gasOverrides = await getOptimizedGasParams(publicClient);
+
       const mintResult = await createContentCoin(
         walletClient,
         publicClient,
-        {
-          content,
-          title,
-          symbol,
-          description,
-          creatorAddress,
-        },
-        { gas: gasParams } // ガスパラメータを渡す
+        { content, title, symbol, description, creatorAddress },
+        gasOverrides, // ← viem Tx parameters と互換のオブジェクト
       );
-      
-      console.log('Mint result:', mintResult);
-      
-      if (!mintResult.success && mintResult.error) {
-        setError(mintResult.error);
+
+      if (!mintResult.success) {
+        setError(mintResult.error ?? 'mint に失敗しました');
         return null;
       }
-      
+
       setResult(mintResult);
       return mintResult;
-    } catch (err: any) {
-      console.error('Error in mint function:', err);
-      const errorMessage = err.message || 'コインの作成中にエラーが発生しました'; 
-      setError(errorMessage);
+    } catch (err: unknown) {
+      console.error(err);
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'コインの作成中に不明なエラーが発生しました',
+      );
       return null;
     } finally {
       setIsLoading(false);
     }
   };
 
-  return {
-    mint,
-    isLoading,
-    error,
-    result,
-  };
+  return { mint, isLoading, error, result };
 }
 
+/* ─────────────── useZoraCreateCoin ─────────────── */
 
 export function useZoraCreateCoin() {
-  const [coinParams, setCoinParams] = useState<CreateCoinParams | null>(null);
-  const [simulateConfig, setSimulateConfig] = useState<SimulateContractParameters | undefined>(undefined);
-  const [error, setError] = useState<Error | null>(null);
   const publicClient = usePublicClient();
 
+  const [coinParams, setCoinParams] = useState<CreateCoinParams | null>(null);
+  const [simulateConfig, setSimulateConfig] =
+    useState<SimulateContractParameters | null>(null);
+  const [error, setError] = useState<Error | null>(null);
+
+  /* --- ① createCoinCall → SimulateContractParameters を作成 --- */
   useEffect(() => {
     if (!coinParams) {
-      setSimulateConfig(undefined);
+      setSimulateConfig(null);
       return;
     }
-    let isMounted = true;
+    let mounted = true;
 
     (async () => {
       try {
-        console.log('Preparing coin creation with params:', coinParams);
-        
-        const callResult = await createCoinCall(coinParams);
-        console.log("createCoinCall result:", callResult);
+        const call = await createCoinCall(coinParams);
+        if (!call) throw new Error('createCoinCall が失敗しました');
 
-        if (callResult && callResult.address && callResult.abi && callResult.functionName && callResult.args) {
-            const configForSimulate: SimulateContractParameters = {
-              address: callResult.address,
-              abi: callResult.abi,
-              functionName: callResult.functionName,
-              args: callResult.args,
-            };
+        const gasOverrides = await getOptimizedGasParams(publicClient);
+        const config: SimulateContractParameters = {
+          address: call.address,
+          abi: call.abi,
+          functionName: call.functionName,
+          args: call.args,
+          ...gasOverrides, // ← maxFeePerGas / maxPriorityFeePerGas 等
+          value: coinParams.initialPurchaseWei,
+        };
 
-            // 最適化されたガスパラメータを取得
-            const gasParams = await getOptimizedGasParams(publicClient);
-            console.log("Using optimized gas parameters for simulation:", gasParams);
-
-            if (coinParams.initialPurchaseWei) {
-              configForSimulate.value = coinParams.initialPurchaseWei;
-            }
-            
-            // ガスパラメータを追加
-            configForSimulate.gas = gasParams;
-
-            if (isMounted) {
-              setSimulateConfig(configForSimulate);
-              setError(null);
-            }
-        } else {
-            console.error("Failed to construct simulate config: Missing required properties from createCoinCall result or callResult is null/undefined", callResult);
-            if (isMounted) {
-              setSimulateConfig(undefined);
-              setError(new Error("コイン作成の準備に失敗しました。必要なパラメータが不足しています。"));
-            }
+        if (mounted) {
+          setSimulateConfig(config);
+          setError(null);
         }
-
       } catch (err) {
-        console.error("createCoinCall failed:", err);
-         if (isMounted) {
-           setSimulateConfig(undefined);
-           setError(err instanceof Error ? err : new Error("コイン作成の準備中にエラーが発生しました"));
-         }
+        console.error(err);
+        if (mounted) {
+          setSimulateConfig(null);
+          setError(
+            err instanceof Error
+              ? err
+              : new Error('コイン作成シミュレーション準備に失敗しました'),
+          );
+        }
       }
     })();
 
     return () => {
-        isMounted = false;
+      mounted = false;
     };
   }, [coinParams, publicClient]);
 
-  const { data: simulateData, error: simulateError } = useSimulateContract(simulateConfig);
-  const { writeContract, status, data: txData, error: writeError } = useWriteContract();
+  /* --- ② wagmi hooks --- */
+  const {
+    data: simulateData,
+    error: simulateError,
+    isError: isSimErr,
+  } = useSimulateContract(simulateConfig ?? undefined, {
+    /* query オプション */
+    query: { enabled: !!simulateConfig },
+  });
 
+  const { writeContract, status, data: txData, error: writeError } =
+    useWriteContract();
+
+  /* --- ③ エラーマージ --- */
   useEffect(() => {
-      if (simulateError) {
-          console.error("Simulation Error:", simulateError);
-          setError(simulateError);
-      }
-      if (writeError) {
-          console.error("Write Contract Error:", writeError);
-          setError(writeError);
-      }
+    if (simulateError) setError(simulateError);
+    if (writeError) setError(writeError);
   }, [simulateError, writeError]);
 
-  const prepareCoin = (params: CreateCoinParams) => {
-    console.log('Preparing coin with parameters:', params);
-    setCoinParams(params);
-  };
+  /* --- ④ 外部公開関数 --- */
+  const prepareCoin = (params: CreateCoinParams) => setCoinParams(params);
 
   const createCoin = async () => {
-    if (simulateData?.request && writeContract) {
-      console.log('Executing coin creation with simulation data:', simulateData.request);
-      
-      try {
-        // 最適化されたガスパラメータを取得
-        const gasParams = await getOptimizedGasParams(publicClient);
-        console.log("Using optimized gas parameters for transaction:", gasParams);
-        
-        // シミュレーションデータにガスパラメータを追加
-        const requestWithGas = {
-          ...simulateData.request,
-          gas: {
-            ...simulateData.request.gas,
-            ...gasParams
-          }
-        };
-        
-        writeContract(requestWithGas);
-      } catch (err) {
-        console.error("Error preparing gas parameters:", err);
-        // エラーが発生した場合は元のリクエストを使用
-        writeContract(simulateData.request);
-      }
-    } else {
-        if (simulateError) {
-             console.error("Cannot create coin due to simulation error:", simulateError);
-             setError(simulateError);
-        } else {
-             const errorMsg = "コイン作成のシミュレーションに失敗しました。パラメータを確認してください。";
-             console.error(errorMsg, { simulateData, writeContractAvailable: !!writeContract });
-             setError(new Error(errorMsg));
-        }
+    if (!simulateData?.request) {
+      setError(
+        simulateError ??
+          new Error('シミュレーションが未完了のためトランザクションを送信できません'),
+      );
+      return;
+    }
+
+    try {
+      const gasOverrides = await getOptimizedGasParams(publicClient);
+      await writeContract({ ...simulateData.request, ...gasOverrides });
+    } catch (err) {
+      console.error(err);
+      setError(
+        err instanceof Error
+          ? err
+          : new Error('トランザクション送信中にエラーが発生しました'),
+      );
     }
   };
 
   return {
     prepareCoin,
     createCoin,
-    isLoading: status === 'pending' || (!!coinParams && !simulateConfig && !simulateError),
-    isSimulating: !!coinParams && !simulateConfig && !simulateError,
+    /* 状態 */
+    isLoading:
+      status === 'pending' ||
+      (!!coinParams && !simulateData && !isSimErr && !writeError),
+    isSimulating: !!coinParams && !simulateData && !isSimErr,
     isConfirming: status === 'pending',
     isSuccess: status === 'success',
-    transactionData: txData,
-    error: error || simulateError || writeError,
+    transactionData: txData as Hash | undefined,
+    error,
   };
 }
 
+/* ─────────────── Trending / New Coins SWR ─────────────── */
+
+const makeFetcher = (fallbackMsg: string) => async (url: string) => {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(fallbackMsg);
+    const data = await res.json();
+    return data.coins ?? [];
+  } catch (err) {
+    console.error(err);
+    return [];
+  }
+};
 
 export function useTrendingCoins(count = 10) {
-    const fetcher = async (url: string) => {
-      try {
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error('トレンドコインの取得に失敗しました');
-        }
-        const data = await response.json();
-        return data.coins || [];
-      } catch (error) {
-        console.error('Error fetching trending coins:', error);
-        return [];
-      }
-    };
+  const { data, error, isLoading, mutate } = useSWR(
+    `/api/coins/trending?count=${count}`,
+    makeFetcher('トレンドコイン取得失敗'),
+    { refreshInterval: 60_000, fallbackData: [], revalidateOnFocus: false },
+  );
 
-    const { data, error, isLoading, mutate } = useSWR(
-      `/api/coins/trending?count=${count}`,
-      fetcher,
-      {
-        refreshInterval: 60000,
-        fallbackData: [],
-        revalidateOnFocus: false,
-      }
-    );
-
-    return {
-      coins: data || [],
-      isLoading,
-      error,
-      refresh: mutate
-    };
+  return { coins: data!, isLoading, error, refresh: mutate };
 }
 
 export function useNewCoins(count = 10) {
-    const fetcher = async (url: string) => {
-      try {
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error('新着コインの取得に失敗しました');
-        }
-        const data = await response.json();
-        return data.coins || [];
-      } catch (error) {
-        console.error('Error fetching new coins:', error);
-        return [];
-      }
-    };
+  const { data, error, isLoading, mutate } = useSWR(
+    `/api/coins/new?count=${count}`,
+    makeFetcher('新着コイン取得失敗'),
+    { refreshInterval: 60_000, fallbackData: [], revalidateOnFocus: false },
+  );
 
-    const { data, error, isLoading, mutate } = useSWR(
-      `/api/coins/new?count=${count}`,
-      fetcher,
-      {
-        refreshInterval: 60000,
-        fallbackData: [],
-        revalidateOnFocus: false,
-      }
-    );
-
-    return {
-      coins: data || [],
-      isLoading,
-      error,
-      refresh: mutate
-    };
+  return { coins: data!, isLoading, error, refresh: mutate };
 }

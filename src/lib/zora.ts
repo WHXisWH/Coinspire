@@ -207,3 +207,13 @@ export async function getNewCoins(count = 10): Promise<CoinDetails[]> {
 export async function getUserCoins(address: string): Promise<CoinDetails[]> {
   return fetchCoinsData('/api/coins/user', { address });
 }
+
+export {
+  prepareMetadata,
+  createContentCoin,
+  extractCoinAddressFromReceipt,
+  fetchCoinsData,
+  getTrendingCoins,
+  getNewCoins,
+  getUserCoins,
+};

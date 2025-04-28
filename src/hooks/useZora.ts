@@ -5,7 +5,7 @@ import {
   useSimulateContract,
   useWriteContract,
 } from 'wagmi';
-import type { Address, Hash, PublicClient } from 'viem';
+import type { Abi, Address, Hash, PublicClient, Chain, Account } from 'viem';
 import { createContentCoin } from '@/lib/zora';
 import { createCoinCall } from '@zoralabs/coins-sdk';
 import type { CreateCoinParams } from '@/types/zora';
@@ -36,12 +36,12 @@ export function useZoraMint() {
     creatorAddress: Address,
   ) => {
     if (!walletClient || !walletClient.account) {
-      setError('ウォレットが接続されていません。');
-      return null;
+       setError('ウォレットが接続されていません。');
+       return null;
     }
     if (!publicClient) {
-      setError('ネットワーク接続を確認してください (Public Client not available)。');
-      return null;
+        setError('ネットワーク接続を確認してください (Public Client not available)。');
+        return null;
     }
     if (!content) {
       setError('コンテンツファイルが選択されていません');
@@ -85,6 +85,7 @@ export function useZoraMint() {
 
   return { mint, isLoading, error, result };
 }
+
 
 /* ─────────────── useZoraCreateCoin ─────────────── */
 export function useZoraCreateCoin() {
@@ -184,17 +185,21 @@ export function useZoraCreateCoin() {
       const gasOverrides = await getOptimizedGasParams(publicClient);
 
       const writeArgs = {
-        ...simulateData.request,
-        type: 'eip1559' as const,
+        address: simulateData.request.address,
+        abi: simulateData.request.abi,
+        functionName: simulateData.request.functionName,
+        args: simulateData.request.args,
+        ...(simulateData.request.value !== undefined && { value: simulateData.request.value }),
+        type: simulateData.request.type ?? 'eip1559', // ユーザー提案を採用
         maxFeePerGas: gasOverrides.maxFeePerGas ?? simulateData.request.maxFeePerGas,
         maxPriorityFeePerGas: gasOverrides.maxPriorityFeePerGas ?? simulateData.request.maxPriorityFeePerGas,
       } satisfies Parameters<typeof writeContract>[0];
 
-      if ('gasPrice' in writeArgs) {
-        delete (writeArgs as any).gasPrice;
-      }
+      console.log("Attempting to send transaction with args:", writeArgs);
 
       await writeContract(writeArgs);
+      console.log("Transaction sent, waiting for confirmation...");
+
     } catch (err) {
       console.error('Error sending transaction:', err);
       setError(

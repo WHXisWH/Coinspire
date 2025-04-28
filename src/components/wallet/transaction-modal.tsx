@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, Fragment, useCallback } from 'react';
-import { useWaitForTransactionReceipt, type WaitForTransactionReceiptData } from 'wagmi';
+import { useWaitForTransactionReceipt } from 'wagmi';
 import { extractCoinAddressFromReceipt } from '@/lib/zora';
 
 interface TransactionModalProps {
@@ -31,14 +31,16 @@ export function TransactionModal({
   
   const transactionHash = txHash ? txHash as `0x${string}` : undefined;
   
+  // Always call the hook, but use 'enabled' to conditionally enable it
   const { 
     data: receipt, 
     isLoading, 
     isError, 
     error 
-  } = isOpen && transactionHash ? useWaitForTransactionReceipt({
+  } = useWaitForTransactionReceipt({
     hash: transactionHash,
-  }) : { data: undefined, isLoading: false, isError: false, error: null };
+    enabled: isOpen && !!transactionHash,
+  });
   
   useEffect(() => {
     if (receipt) {
@@ -126,7 +128,7 @@ export function TransactionModal({
                 </button>
                 
                 {txHash && (
-                  <a
+                  
                     href={`https://basescan.org/tx/${txHash}`}
                     target="_blank"
                     rel="noopener noreferrer"

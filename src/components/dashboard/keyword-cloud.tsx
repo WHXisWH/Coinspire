@@ -7,9 +7,20 @@ interface KeywordCloudProps {
   keywords: Keyword[];
 }
 
-// memoでコンポーネントをラップ
 export const KeywordCloud = memo(function KeywordCloud({ keywords }: KeywordCloudProps) {
   const [hoveredKeyword, setHoveredKeyword] = useState<string | null>(null);
+  
+  // Always call useMemo unconditionally - move the conditional logic inside
+  const shuffledKeywords = useMemo(() => {
+    if (!keywords || keywords.length === 0) return [];
+    return [...keywords].sort(() => Math.random() - 0.5);
+  }, [keywords]);
+  
+  // Always call useMemo unconditionally
+  const maxValue = useMemo(() => {
+    if (!keywords || keywords.length === 0) return 0;
+    return Math.max(...keywords.map((keyword: Keyword) => keyword.value));
+  }, [keywords]);
   
   // キーワードがない場合
   if (!keywords || keywords.length === 0) {
@@ -22,16 +33,6 @@ export const KeywordCloud = memo(function KeywordCloud({ keywords }: KeywordClou
       </div>
     );
   }
-  
-  // キーワードをシャッフル - useMemoでメモ化
-  const shuffledKeywords = useMemo(() => {
-    return [...keywords].sort(() => Math.random() - 0.5);
-  }, [keywords]);
-  
-  // 最大値を取得（フォントサイズの計算用）- useMemoでメモ化
-  const maxValue = useMemo(() => {
-    return Math.max(...shuffledKeywords.map((keyword: Keyword) => keyword.value));
-  }, [shuffledKeywords]);
   
   return (
     <div className="keyword-cloud flex flex-wrap justify-center gap-3 p-4 relative">

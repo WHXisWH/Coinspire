@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { fetchRecommendationsFromAI, fetchTemplatesFromAI } from '@/lib/ai';
@@ -198,11 +199,13 @@ export function TemplateGallery({ trends, onSelect }: TemplateGalleryProps) {
                 <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
                   {template.imageUrl.startsWith('/') ? (
                     // 内部の静的画像の場合
-                    <img
-                      src={template.imageUrl}
-                      alt={template.name}
-                      className="object-cover w-full h-full"
-                    />
+                     <Image
+                       src={template.imageUrl}
+                       alt={template.name}
+                       width={512}
+                       height={256}
+                       className="object-cover w-full h-full"
+                     />
                   ) : (
                     // 外部画像の場合はフォールバック表示
                     <div className="w-full h-full flex items-center justify-center text-gray-500">

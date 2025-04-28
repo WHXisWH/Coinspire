@@ -66,4 +66,4 @@ export const TrendCard = memo(function TrendCard({ name, value, rank }: TrendCar
       </div>
     </div>
   );
-}
+});

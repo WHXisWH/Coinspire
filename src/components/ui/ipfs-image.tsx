@@ -38,7 +38,7 @@ export function IpfsImage({
     
     setIsLoading(true);
     setIsError(false);
-  }, [ipfsUrl, gatewayIndex, fallbackSrc]);
+  }, [ipfsUrl, gatewayIndex, fallbackSrc, gateways]);
   
   const handleError = () => {
     if (gatewayIndex < gateways.length - 1) {

@@ -41,7 +41,6 @@ NEXT_PUBLIC_BASE_RPC_URL=https://mainnet.base.org
 NEXT_PUBLIC_PLATFORM_REFERRER_ADDRESS=your_platform_address
 
 # Optional during development (uses mock data)
-ZORA_API_KEY=your_zora_api_key
 NEXT_PUBLIC_WALLET_CONNECT_ID=your_wallet_connect_id
 ```
 
@@ -149,7 +148,6 @@ NEXT_PUBLIC_BASE_RPC_URL=https://mainnet.base.org
 NEXT_PUBLIC_PLATFORM_REFERRER_ADDRESS=your_platform_address
 
 # 開発中はオプション（モックデータを使用）
-ZORA_API_KEY=your_zora_api_key
 NEXT_PUBLIC_WALLET_CONNECT_ID=your_wallet_connect_id
 ```
 

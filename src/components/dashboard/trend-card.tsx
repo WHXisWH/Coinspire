@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, memo } from 'react';
 
 interface TrendCardProps {
   name: string;
@@ -8,7 +8,7 @@ interface TrendCardProps {
   rank: number;
 }
 
-export function TrendCard({ name, value, rank }: TrendCardProps) {
+export const TrendCard = memo(function TrendCard({ name, value, rank }: TrendCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   
   // 値を%に変換（表示用）

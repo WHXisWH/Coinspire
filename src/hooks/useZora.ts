@@ -6,6 +6,7 @@ import { createCoinCall } from "@zoralabs/coins-sdk";
 import type { Address, SimulateContractParameters, Chain, Account } from 'viem';
 import type { CreateCoinParams } from '@/types/zora';
 import useSWR from 'swr';
+import { getOptimizedGasParams } from '@/utils/gas';
 
 
 export function useZoraMint() {
@@ -49,6 +50,10 @@ export function useZoraMint() {
         creatorAddress
       });
       
+      // 最適化されたガスパラメータを取得
+      const gasParams = await getOptimizedGasParams(publicClient);
+      console.log("Using optimized gas parameters:", gasParams);
+      
       const mintResult = await createContentCoin(
         walletClient,
         publicClient,
@@ -58,7 +63,8 @@ export function useZoraMint() {
           symbol,
           description,
           creatorAddress,
-        }
+        },
+        { gas: gasParams } // ガスパラメータを渡す
       );
       
       console.log('Mint result:', mintResult);
@@ -93,6 +99,7 @@ export function useZoraCreateCoin() {
   const [coinParams, setCoinParams] = useState<CreateCoinParams | null>(null);
   const [simulateConfig, setSimulateConfig] = useState<SimulateContractParameters | undefined>(undefined);
   const [error, setError] = useState<Error | null>(null);
+  const publicClient = usePublicClient();
 
   useEffect(() => {
     if (!coinParams) {
@@ -116,10 +123,16 @@ export function useZoraCreateCoin() {
               args: callResult.args,
             };
 
+            // 最適化されたガスパラメータを取得
+            const gasParams = await getOptimizedGasParams(publicClient);
+            console.log("Using optimized gas parameters for simulation:", gasParams);
 
             if (coinParams.initialPurchaseWei) {
               configForSimulate.value = coinParams.initialPurchaseWei;
             }
+            
+            // ガスパラメータを追加
+            configForSimulate.gas = gasParams;
 
             if (isMounted) {
               setSimulateConfig(configForSimulate);
@@ -145,7 +158,7 @@ export function useZoraCreateCoin() {
     return () => {
         isMounted = false;
     };
-  }, [coinParams]);
+  }, [coinParams, publicClient]);
 
   const { data: simulateData, error: simulateError } = useSimulateContract(simulateConfig);
   const { writeContract, status, data: txData, error: writeError } = useWriteContract();
@@ -166,12 +179,31 @@ export function useZoraCreateCoin() {
     setCoinParams(params);
   };
 
-  const createCoin = () => {
+  const createCoin = async () => {
     if (simulateData?.request && writeContract) {
       console.log('Executing coin creation with simulation data:', simulateData.request);
-      writeContract(simulateData.request);
-    } else {
+      
+      try {
+        // 最適化されたガスパラメータを取得
+        const gasParams = await getOptimizedGasParams(publicClient);
+        console.log("Using optimized gas parameters for transaction:", gasParams);
         
+        // シミュレーションデータにガスパラメータを追加
+        const requestWithGas = {
+          ...simulateData.request,
+          gas: {
+            ...simulateData.request.gas,
+            ...gasParams
+          }
+        };
+        
+        writeContract(requestWithGas);
+      } catch (err) {
+        console.error("Error preparing gas parameters:", err);
+        // エラーが発生した場合は元のリクエストを使用
+        writeContract(simulateData.request);
+      }
+    } else {
         if (simulateError) {
              console.error("Cannot create coin due to simulation error:", simulateError);
              setError(simulateError);

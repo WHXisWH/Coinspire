@@ -1,13 +1,14 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, memo } from 'react';
 import type { Keyword } from '@/types/trends';
 
 interface KeywordCloudProps {
   keywords: Keyword[];
 }
 
-export function KeywordCloud({ keywords }: KeywordCloudProps) {
+// memoでコンポーネントをラップ
+export const KeywordCloud = memo(function KeywordCloud({ keywords }: KeywordCloudProps) {
   const [hoveredKeyword, setHoveredKeyword] = useState<string | null>(null);
   
   // キーワードがない場合
@@ -22,13 +23,15 @@ export function KeywordCloud({ keywords }: KeywordCloudProps) {
     );
   }
   
-  // キーワードをシャッフル
+  // キーワードをシャッフル - useMemoでメモ化
   const shuffledKeywords = useMemo(() => {
     return [...keywords].sort(() => Math.random() - 0.5);
   }, [keywords]);
   
-  // 最大値を取得（フォントサイズの計算用）
-  const maxValue = Math.max(...shuffledKeywords.map((keyword: Keyword) => keyword.value));
+  // 最大値を取得（フォントサイズの計算用）- useMemoでメモ化
+  const maxValue = useMemo(() => {
+    return Math.max(...shuffledKeywords.map((keyword: Keyword) => keyword.value));
+  }, [shuffledKeywords]);
   
   return (
     <div className="keyword-cloud flex flex-wrap justify-center gap-3 p-4 relative">
@@ -69,4 +72,4 @@ export function KeywordCloud({ keywords }: KeywordCloudProps) {
       })}
     </div>
   );
-}
+});

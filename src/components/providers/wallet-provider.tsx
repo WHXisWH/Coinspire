@@ -1,15 +1,20 @@
 'use client';
 
 import { WagmiConfig, createConfig } from 'wagmi';
-import { base } from 'wagmi/chains';
+import { base, baseSepolia } from 'wagmi/chains';
 import { ConnectKitProvider, getDefaultConfig } from 'connectkit';
 import { http } from 'viem';
 
-// WalletConnect ProjectIdが環境変数にある場合は使用
-const walletConnectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_ID || '';
+// 環境に応じたチェーン選択
+const isTestnet = process.env.NEXT_PUBLIC_NETWORK_ENVIRONMENT === 'testnet';
+const defaultChain = isTestnet ? baseSepolia : base;
 
-// Base ChainのRPC URLが環境変数にある場合は使用
+// Base ChainのRPC URL
 const baseRpcUrl = process.env.NEXT_PUBLIC_BASE_RPC_URL || 'https://mainnet.base.org';
+const baseSepoliaRpcUrl = process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL || 'https://sepolia.base.org';
+
+// WalletConnect ProjectId
+const walletConnectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_ID || '';
 
 // Wagmi設定
 const config = createConfig(
@@ -19,15 +24,19 @@ const config = createConfig(
     appDescription: 'トレンド分析と創作支援プラットフォーム',
     appUrl: 'https://coinspire.app',
 
-    // 必要なチェーンを指定
-    chains: [base],
+    // 両方のチェーンをサポート
+    chains: [base, baseSepolia],
+
+    // デフォルトのチェーンを環境に応じて設定
+    initialChain: defaultChain,
 
     // WalletConnectのProjectIDを設定
     walletConnectProjectId: walletConnectId,
 
-    // RPC設定: base.id のトランスポートを http(baseRpcUrl) に設定
+    // RPC設定
     transports: {
       [base.id]: http(baseRpcUrl),
+      [baseSepolia.id]: http(baseSepoliaRpcUrl),
     },
   })
 );
@@ -40,6 +49,8 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
           language: 'ja' as unknown as any,
           hideBalance: false,
           hideTooltips: false,
+          // 必要なチェーンだけを表示
+          customChains: isTestnet ? [baseSepolia] : [base],
         }}
       >
         {children}

@@ -8,12 +8,16 @@ from suggest.template import generate_templates
 from suggest.prompt import generate_prompts
 
 app = Flask(__name__)
-CORS(app, resources={r"/api/*": {"origins": "https://coinspire.vercel.app"}})
 
-# 環境変数からAPIキーを取得
-API_KEY = os.environ.get('AI_SERVICE_API_KEY')
+# CORS設定を環境に応じて変更
+allowed_origins = os.environ.get('ALLOWED_ORIGINS', 'https://coinspire.vercel.app')
+origins = allowed_origins.split(',')
+
+CORS(app, resources={r"/api/*": {"origins": origins}})
 
 # APIキー認証ミドルウェア
+API_KEY = os.environ.get('AI_SERVICE_API_KEY')
+
 def require_api_key(f):
     def decorated_function(*args, **kwargs):
         # APIキーが設定されていない場合は認証をスキップ（開発環境用）
@@ -29,6 +33,11 @@ def require_api_key(f):
             
     decorated_function.__name__ = f.__name__
     return decorated_function
+
+# ヘルスチェックエンドポイント
+@app.route('/health', methods=['GET'])
+def health_check():
+    return jsonify({"status": "healthy", "message": "AI service is running"})
 
 # トレンド分析エンドポイント
 @app.route('/api/trends', methods=['GET'])

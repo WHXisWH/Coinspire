@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useWaitForTransactionReceipt } from 'wagmi';
+import { useState, useEffect, Fragment, useCallback } from 'react';
+import { useWaitForTransactionReceipt, type WaitForTransactionReceiptData } from 'wagmi';
 import { extractCoinAddressFromReceipt } from '@/lib/zora';
 
 interface TransactionModalProps {
@@ -9,21 +9,28 @@ interface TransactionModalProps {
   onClose: () => void;
   txHash?: `0x${string}` | null;
   onSuccess?: (address?: string) => void;
+  onRetry?: () => void;
 }
 
 export function TransactionModal({ 
   isOpen, 
   onClose, 
   txHash, 
-  onSuccess 
+  onSuccess,
+  onRetry 
 }: TransactionModalProps) {
   const [step, setStep] = useState<'processing' | 'success' | 'error'>('processing');
   
-  // txHashがnullの場合はundefinedに変換して型互換性を保つ
+  const handleRetry = useCallback(() => {
+    setStep('processing');
+    if (onRetry) {
+      onRetry();
+    }
+    onClose();
+  }, [onRetry, onClose]);
+  
   const transactionHash = txHash ? txHash as `0x${string}` : undefined;
   
-  // 条件付きでトランザクションレシートを監視
-  // enabled プロパティは使用せず、hash が存在する場合にのみフックを呼び出す
   const { 
     data: receipt, 
     isLoading, 
@@ -88,26 +95,61 @@ export function TransactionModal({
               <p className="text-gray-600 dark:text-gray-400 mb-4">
                 {error?.message || 'トランザクションの処理中にエラーが発生しました。'}
               </p>
+              <div className="bg-red-50 dark:bg-red-900/30 p-3 rounded-lg mb-4 text-sm">
+                <p className="font-medium mb-1">考えられる原因:</p>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>ネットワーク接続の問題</li>
+                  <li>ウォレットの残高不足</li>
+                  <li>ガス価格の急激な変動</li>
+                  <li>トランザクションパラメータの問題</li>
+                </ul>
+              </div>
             </>
           )}
-          
+
+          {/* ボタンセクション */}
           <div className="flex justify-center mt-6">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              {step === 'success' ? '完了' : '閉じる'}
-            </button>
-            
-            {step === 'error' && txHash && (
-              <a
-                href={`https://basescan.org/tx/${txHash}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="ml-3 px-4 py-2 border border-blue-600 text-blue-600 rounded hover:bg-blue-50"
+            {step === 'success' ? (
+              <button
+                onClick={onClose}
+                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
               >
-                詳細を確認
-              </a>
+                完了
+              </button>
+            ) : step === 'error' ? (
+              <div className="flex space-x-3">
+                <button
+                  onClick={onClose}
+                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded hover:bg-gray-300 dark:hover:bg-gray-600"
+                >
+                  閉じる
+                </button>
+                
+                {txHash && (
+                  <a
+                    href={`https://basescan.org/tx/${txHash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4 py-2 border border-blue-600 text-blue-600 rounded hover:bg-blue-50"
+                  >
+                    詳細を確認
+                  </a>
+                )}
+                
+                <button
+                  onClick={handleRetry}
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                >
+                  再試行
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={onClose}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                閉じる
+              </button>
             )}
           </div>
         </div>

@@ -10,7 +10,6 @@ export async function GET() {
     nodeEnv: process.env.NODE_ENV,
     nextPublicAppUrl: process.env.NEXT_PUBLIC_APP_URL || 'not set',
     aiServiceConfigured: !!process.env.AI_SERVICE_URL,
-    zoraApiConfigured: !!process.env.ZORA_API_KEY,
     nftStorageConfigured: !!process.env.NFT_STORAGE_API_KEY,
     baseRpcConfigured: !!process.env.NEXT_PUBLIC_BASE_RPC_URL,
     platformReferrerConfigured: !!process.env.NEXT_PUBLIC_PLATFORM_REFERRER_ADDRESS,

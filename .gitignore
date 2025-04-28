@@ -26,6 +26,9 @@ yarn-error.log*
 # local env files
 .env*.local
 .env
+.env.sepolia
+.env.production
+.env.canary
 
 # vercel
 .vercel
@@ -40,3 +43,31 @@ __pycache__/
 *$py.class
 venv/
 .env.local
+
+# Docker
+.dockerignore
+docker-compose.yml
+
+# AI service
+ai/.venv/
+ai/__pycache__/
+ai/analyze/__pycache__/
+ai/suggest/__pycache__/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Build artifacts
+dist/
+build/
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+.tmp/
+temp/

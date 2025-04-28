@@ -9,14 +9,6 @@ import type { CreateCoinParams, CoinDetails } from "@/types/zora";
 import { uploadToIPFS, uploadJSONToIPFS } from './ipfs';
 import { Address } from "viem";
 
-// APIキーがあれば設定する
-if (process.env.ZORA_API_KEY) {
-  setApiKey(process.env.ZORA_API_KEY);
-  console.log("Zora API key has been set");
-} else {
-  console.warn("No Zora API key found in environment variables");
-}
-
 // メタデータ準備
 export async function prepareMetadata(
   content: File | Blob,

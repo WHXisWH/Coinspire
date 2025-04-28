@@ -6,7 +6,7 @@ import {
   useWriteContract,
 } from 'wagmi';
 import type { Address, Hash } from 'viem';
-import { createContentCoin } from '@/lib/zora'; // MintResultはlibで定義する方針に
+import { createContentCoin } from '@/lib/zora';
 import { createCoinCall } from '@zoralabs/coins-sdk';
 import type { CreateCoinParams } from '@/types/zora';
 import useSWR from 'swr';
@@ -18,6 +18,8 @@ interface MintResult {
   address?: Address;
   error?: string;
 }
+
+/* ─────────────── useZoraMint ─────────────── */
 
 export function useZoraMint() {
   const { data: walletClient } = useWalletClient();
@@ -34,7 +36,6 @@ export function useZoraMint() {
     description: string,
     creatorAddress: Address,
   ) => {
-    /* 前提チェック */
     if (!walletClient || !walletClient.account || !publicClient) {
       setError('ウォレットが接続されていません。');
       return null;
@@ -57,8 +58,14 @@ export function useZoraMint() {
       const mintResult = await createContentCoin(
         walletClient,
         publicClient,
-        { content, title, symbol, description, creatorAddress },
-        gasOverrides, // ← viem Tx parameters と互換のオブジェクト
+        {
+          content,
+          title,
+          symbol,
+          description,
+          creatorAddress,
+          gasOverrides,  // ←ここに統合する！
+        }
       );
 
       if (!mintResult.success) {
@@ -93,7 +100,6 @@ export function useZoraCreateCoin() {
   const [simulateConfig, setSimulateConfig] = useState<any | null>(null);
   const [error, setError] = useState<Error | null>(null);
 
-  /* --- ① createCoinCall → SimulateContractParameters を作成 --- */
   useEffect(() => {
     if (!coinParams) {
       setSimulateConfig(null);
@@ -106,13 +112,11 @@ export function useZoraCreateCoin() {
         const call = await createCoinCall(coinParams);
         if (!call) throw new Error('createCoinCall が失敗しました');
 
-        const gasOverrides = await getOptimizedGasParams(publicClient);
         const config = {
           address: call.address,
           abi: call.abi,
           functionName: call.functionName,
           args: call.args,
-          ...gasOverrides, // ← maxFeePerGas / maxPriorityFeePerGas 等
           value: coinParams.initialPurchaseWei,
         };
 
@@ -136,26 +140,22 @@ export function useZoraCreateCoin() {
     return () => {
       mounted = false;
     };
-  }, [coinParams, publicClient]);
+  }, [coinParams]);
 
-  /* --- ② wagmi hooks --- */
   const {
     data: simulateData,
     error: simulateError,
     isError: isSimErr,
   } = useSimulateContract(simulateConfig ?? undefined);
 
-  // wagmi v2の形式に修正
   const { writeContract, status, data: txData, error: writeError } =
     useWriteContract();
 
-  /* --- ③ エラーマージ --- */
   useEffect(() => {
     if (simulateError) setError(simulateError);
     if (writeError) setError(writeError);
   }, [simulateError, writeError]);
 
-  /* --- ④ 外部公開関数 --- */
   const prepareCoin = (params: CreateCoinParams) => setCoinParams(params);
 
   const createCoin = async () => {
@@ -169,7 +169,11 @@ export function useZoraCreateCoin() {
 
     try {
       const gasOverrides = await getOptimizedGasParams(publicClient);
-      writeContract({ ...simulateData.request, ...gasOverrides });
+      await writeContract({
+        ...simulateData.request,
+        maxFeePerGas: gasOverrides.maxFeePerGas,
+        maxPriorityFeePerGas: gasOverrides.maxPriorityFeePerGas,
+      });
     } catch (err) {
       console.error(err);
       setError(
@@ -183,7 +187,6 @@ export function useZoraCreateCoin() {
   return {
     prepareCoin,
     createCoin,
-    /* 状態 */
     isLoading:
       status === 'pending' ||
       (!!coinParams && !simulateData && !isSimErr && !writeError),

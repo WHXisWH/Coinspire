@@ -19,26 +19,21 @@ export function TransactionModal({
   onSuccess,
   onRetry,
 }: TransactionModalProps) {
-  /** 表示ステップを管理：processing / success / error */
+  /* ───────── ステップ管理 ───────── */
   const [step, setStep] = useState<'processing' | 'success' | 'error'>(
     'processing',
   );
 
-  /** 「再試行」ボタン押下時のハンドラ */
   const handleRetry = useCallback(() => {
     setStep('processing');
     onRetry?.();
     onClose();
   }, [onRetry, onClose]);
 
-  /** txHash が null の場合は undefined にしてフックに渡す */
+  /* null を undefined に変換してフックへ */
   const transactionHash = txHash as `0x${string}` | undefined;
 
-  /**
-   * wagmi-v2 の `useWaitForTransactionReceipt`
-   * - enabled を false にすると EVM ポーリングを停止できる
-   * - receipt.status は 'success' | 'reverted'
-   */
+  /* ───────── Receipt 待機フック ───────── */
   const {
     data: receipt,
     isLoading,
@@ -47,16 +42,16 @@ export function TransactionModal({
   } = useWaitForTransactionReceipt({
     hash: transactionHash,
     confirmations: 1,
-    enabled: isOpen && !!transactionHash,
+    query: { enabled: isOpen && !!transactionHash }, // ← ここを修正
   });
 
-  /** receipt または isError の変化に応じてステップを更新 */
+  /* ───────── ステップ更新 ───────── */
   useEffect(() => {
     if (receipt) {
       if (receipt.status === 'success') {
         setStep('success');
         const coinAddress = extractCoinAddressFromReceipt(receipt);
-        if (coinAddress) onSuccess?.(coinAddress);
+        coinAddress && onSuccess?.(coinAddress);
       } else {
         setStep('error');
       }
@@ -65,14 +60,14 @@ export function TransactionModal({
     }
   }, [receipt, isError, onSuccess]);
 
-  /** モーダル自体を閉じている場合は描画しない */
   if (!isOpen) return null;
 
+  /* ───────── 以下 JSX ───────── */
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-gray-800">
         <div className="text-center">
-          {/* 処理中ステップ */}
+          {/* 処理中 */}
           {isLoading && step === 'processing' && (
             <>
               <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600"></div>
@@ -85,7 +80,7 @@ export function TransactionModal({
             </>
           )}
 
-          {/* 成功ステップ */}
+          {/* 成功 */}
           {step === 'success' && (
             <>
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 p-3 dark:bg-green-900">
@@ -101,7 +96,7 @@ export function TransactionModal({
                     strokeLinejoin="round"
                     strokeWidth="2"
                     d="M5 13l4 4L19 7"
-                  ></path>
+                  />
                 </svg>
               </div>
               <h3 className="mb-2 text-xl font-semibold">成功しました！</h3>
@@ -111,7 +106,7 @@ export function TransactionModal({
             </>
           )}
 
-          {/* エラーステップ */}
+          {/* エラー */}
           {step === 'error' && (
             <>
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100 p-3 dark:bg-red-900">
@@ -127,7 +122,7 @@ export function TransactionModal({
                     strokeLinejoin="round"
                     strokeWidth="2"
                     d="M6 18L18 6M6 6l12 12"
-                  ></path>
+                  />
                 </svg>
               </div>
               <h3 className="mb-2 text-xl font-semibold">
@@ -149,7 +144,7 @@ export function TransactionModal({
             </>
           )}
 
-          {/* ボタンセクション */}
+          {/* ボタン */}
           <div className="mt-6 flex justify-center">
             {step === 'success' ? (
               <button

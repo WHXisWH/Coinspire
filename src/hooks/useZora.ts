@@ -189,8 +189,8 @@ export function useZoraCreateCoin() {
         abi: simulateData.request.abi,
         functionName: simulateData.request.functionName,
         args: simulateData.request.args,
-        ...(simulateData.request.value !== undefined && { value: simulateData.request.value }),
-        type: simulateData.request.type ?? 'eip1559', // ユーザー提案を採用
+        ...(simulateData.request.value !== undefined && { value: simulateData.request.value }), // valueを条件付きで含める
+        type: 'eip1559' as const,
         maxFeePerGas: gasOverrides.maxFeePerGas ?? simulateData.request.maxFeePerGas,
         maxPriorityFeePerGas: gasOverrides.maxPriorityFeePerGas ?? simulateData.request.maxPriorityFeePerGas,
       } satisfies Parameters<typeof writeContract>[0];

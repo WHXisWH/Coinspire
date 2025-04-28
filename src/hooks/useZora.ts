@@ -185,11 +185,14 @@ export function useZoraCreateCoin() {
       const gasOverrides = await getOptimizedGasParams(publicClient);
 
       const writeArgs = {
-      ...simulateData.request,
-      overrides: {
-      maxFeePerGas: gasOverrides.maxFeePerGas ?? simulateData.request.overrides?.maxFeePerGas,
-      maxPriorityFeePerGas: gasOverrides.maxPriorityFeePerGas ?? simulateData.request.overrides?.maxPriorityFeePerGas,
-      },
+        address: simulateData.request.address,
+        abi: simulateData.request.abi,
+        functionName: simulateData.request.functionName,
+        args: simulateData.request.args,
+        ...(simulateData.request.value !== undefined && { value: simulateData.request.value }), // valueを条件付きで含める
+        type: 'eip1559' as const, // type を固定
+        maxFeePerGas: gasOverrides.maxFeePerGas ?? simulateData.request.maxFeePerGas, // トップレベルに配置
+        maxPriorityFeePerGas: gasOverrides.maxPriorityFeePerGas ?? simulateData.request.maxPriorityFeePerGas, // トップレベルに配置
       } satisfies Parameters<typeof writeContract>[0];
 
       console.log("Attempting to send transaction with args:", writeArgs);

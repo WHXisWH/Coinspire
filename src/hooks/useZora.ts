@@ -12,14 +12,12 @@ import type { CreateCoinParams } from '@/types/zora';
 import useSWR from 'swr';
 import { getOptimizedGasParams } from '@/utils/gas';
 
-// MintResultの型をここで直接定義
 interface MintResult {
   success: boolean;
   hash?: string;
+  address?: Address;
   error?: string;
 }
-
-/* ─────────────── useZoraMint ─────────────── */
 
 export function useZoraMint() {
   const { data: walletClient } = useWalletClient();
@@ -27,9 +25,7 @@ export function useZoraMint() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState
-    (MintResult & { address?: Address }) | null
-  >(null);
+  const [result, setResult] = useState<MintResult | null>(null);
 
   const mint = async (
     content: File,

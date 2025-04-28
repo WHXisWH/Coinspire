@@ -5,52 +5,54 @@ import { base, baseSepolia } from 'wagmi/chains';
 import { ConnectKitProvider, getDefaultConfig } from 'connectkit';
 import { http } from 'viem';
 
-// 環境に応じたチェーン選択
-const isTestnet = process.env.NEXT_PUBLIC_NETWORK_ENVIRONMENT === 'testnet';
-const defaultChain = isTestnet ? baseSepolia : base;
+const isTestnet =
+  process.env.NEXT_PUBLIC_NETWORK_ENVIRONMENT === 'testnet';
 
-// Base ChainのRPC URL
-const baseRpcUrl = process.env.NEXT_PUBLIC_BASE_RPC_URL || 'https://mainnet.base.org';
-const baseSepoliaRpcUrl = process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL || 'https://sepolia.base.org';
+const walletConnectId =
+  process.env.NEXT_PUBLIC_WALLET_CONNECT_ID ?? '';
 
-// WalletConnect ProjectId
-const walletConnectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_ID || '';
+const baseRpcUrl =
+  process.env.NEXT_PUBLIC_BASE_RPC_URL ?? 'https://mainnet.base.org';
+const baseSepoliaRpcUrl =
+  process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL ??
+  'https://sepolia.base.org';
 
-// Wagmi設定
+/* ───── wagmi & ConnectKit 共通設定 ───── */
 const config = createConfig(
   getDefaultConfig({
-    // App情報
     appName: 'Coinspire',
     appDescription: 'トレンド分析と創作支援プラットフォーム',
     appUrl: 'https://coinspire.app',
 
-    // 両方のチェーンをサポート
+    /* 利用可能チェーン（UI でも自動反映） */
     chains: [base, baseSepolia],
 
-    // デフォルトのチェーンを環境に応じて設定
-    initialChain: defaultChain,
-
-    // WalletConnectのProjectIDを設定
-    walletConnectProjectId: walletConnectId,
-
-    // RPC設定
+    /* RPC Transport */
     transports: {
       [base.id]: http(baseRpcUrl),
       [baseSepolia.id]: http(baseSepoliaRpcUrl),
     },
-  })
+
+    /* WalletConnect */
+    walletConnectProjectId: walletConnectId,
+  }),
 );
 
-export function WalletProvider({ children }: { children: React.ReactNode }) {
+/* ───── Provider ───── */
+export function WalletProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <WagmiConfig config={config}>
       <ConnectKitProvider
         options={{
-          language: 'ja' as unknown as any,
+          /* ✅ ConnectKitProvider 側は initialChainId で指定 */
+          initialChainId: isTestnet ? baseSepolia.id : base.id,
+          language: 'ja' as any,
           hideBalance: false,
           hideTooltips: false,
-          // 必要なチェーンだけを表示
-          customChains: isTestnet ? [baseSepolia] : [base],
         }}
       >
         {children}

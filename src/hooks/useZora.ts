@@ -189,13 +189,14 @@ export function useZoraCreateCoin() {
       const { value, ...restRequest } = simulateData.request;
 
       const writeArgs = {
-        ...restRequest, // value を含まない request の残りを展開
-        ...(value !== undefined ? { value } : {}), // value が undefined でない場合のみ { value: value } を展開
+        address: simulateData.request.address,
+        abi: simulateData.request.abi,
+        functionName: simulateData.request.functionName,
+        args: simulateData.request.args,
         type: 'eip1559' as const,
-        // ガスパラメータのフォールバックは元の request を参照 (大きな問題はないはず)
-        maxFeePerGas: gasOverrides.maxFeePerGas ?? simulateData.request.maxFeePerGas,
-        maxPriorityFeePerGas: gasOverrides.maxPriorityFeePerGas ?? simulateData.request.maxPriorityFeePerGas,
-      } satisfies Parameters<typeof writeContract>[0];
+        maxFeePerGas: gasOverrides.maxFeePerGas,
+        maxPriorityFeePerGas: gasOverrides.maxPriorityFeePerGas,
+    } satisfies Parameters<typeof writeContract>[0];
 
       console.log("Attempting to send transaction with args:", writeArgs);
 

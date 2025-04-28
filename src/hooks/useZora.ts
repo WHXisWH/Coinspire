@@ -166,6 +166,7 @@ export function useZoraCreateCoin() {
       return;
     }
 
+    // ここでチェックすることで、以降 request は non-null として扱える (型ガード)
     if (!simulateData?.request) {
       setError(
         simulateError ??
@@ -184,15 +185,16 @@ export function useZoraCreateCoin() {
     try {
       const gasOverrides = await getOptimizedGasParams(publicClient);
 
+      // value と残りの request を分割代入
+      const { value, ...restRequest } = simulateData.request;
+
       const writeArgs = {
-        address: simulateData.request.address,
-        abi: simulateData.request.abi,
-        functionName: simulateData.request.functionName,
-        args: simulateData.request.args,
-        ...(simulateData.request.value !== undefined && { value: simulateData.request.value }), // valueを条件付きで含める
-        type: 'eip1559' as const, // type を固定
-        maxFeePerGas: gasOverrides.maxFeePerGas ?? simulateData.request.maxFeePerGas, // トップレベルに配置
-        maxPriorityFeePerGas: gasOverrides.maxPriorityFeePerGas ?? simulateData.request.maxPriorityFeePerGas, // トップレベルに配置
+        ...restRequest, // value を含まない request の残りを展開
+        ...(value !== undefined ? { value } : {}), // value が undefined でない場合のみ { value: value } を展開
+        type: 'eip1559' as const,
+        // ガスパラメータのフォールバックは元の request を参照 (大きな問題はないはず)
+        maxFeePerGas: gasOverrides.maxFeePerGas ?? simulateData.request.maxFeePerGas,
+        maxPriorityFeePerGas: gasOverrides.maxPriorityFeePerGas ?? simulateData.request.maxPriorityFeePerGas,
       } satisfies Parameters<typeof writeContract>[0];
 
       console.log("Attempting to send transaction with args:", writeArgs);

@@ -47,7 +47,7 @@ jobs:
         run: npm ci
         
       - name: Link Vercel project
-        run: npx vercel link --token ${{ secrets.VERCEL_TOKEN }} --org-id ${{ secrets.VERCEL_ORG_ID }} --project-id ${{ secrets.VERCEL_PROJECT_ID }}
+        run: npx vercel link --token ${{ secrets.VERCEL_TOKEN }} --project-id ${{ secrets.VERCEL_PROJECT_ID }}
 
       #- name: Set environment file
       #  run: |

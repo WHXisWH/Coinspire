@@ -4,17 +4,20 @@ import {
   useWalletClient,
   useSimulateContract,
   useWriteContract,
-  type SimulateContractParameters,
 } from 'wagmi';
 import type { Address, Hash } from 'viem';
-import {
-  createContentCoin,
-  type MintResult,
-} from '@/lib/zora'; // ← 型エクスポートを想定
+import { createContentCoin } from '@/lib/zora'; // MintResultはlibで定義する方針に
 import { createCoinCall } from '@zoralabs/coins-sdk';
 import type { CreateCoinParams } from '@/types/zora';
 import useSWR from 'swr';
 import { getOptimizedGasParams } from '@/utils/gas';
+
+// MintResultの型をここで直接定義
+interface MintResult {
+  success: boolean;
+  hash?: string;
+  error?: string;
+}
 
 /* ─────────────── useZoraMint ─────────────── */
 
@@ -24,7 +27,7 @@ export function useZoraMint() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<
+  const [result, setResult] = useState
     (MintResult & { address?: Address }) | null
   >(null);
 
@@ -91,8 +94,7 @@ export function useZoraCreateCoin() {
   const publicClient = usePublicClient();
 
   const [coinParams, setCoinParams] = useState<CreateCoinParams | null>(null);
-  const [simulateConfig, setSimulateConfig] =
-    useState<SimulateContractParameters | null>(null);
+  const [simulateConfig, setSimulateConfig] = useState<any | null>(null);
   const [error, setError] = useState<Error | null>(null);
 
   /* --- ① createCoinCall → SimulateContractParameters を作成 --- */
@@ -109,7 +111,7 @@ export function useZoraCreateCoin() {
         if (!call) throw new Error('createCoinCall が失敗しました');
 
         const gasOverrides = await getOptimizedGasParams(publicClient);
-        const config: SimulateContractParameters = {
+        const config = {
           address: call.address,
           abi: call.abi,
           functionName: call.functionName,
@@ -145,11 +147,9 @@ export function useZoraCreateCoin() {
     data: simulateData,
     error: simulateError,
     isError: isSimErr,
-  } = useSimulateContract(simulateConfig ?? undefined, {
-    /* query オプション */
-    query: { enabled: !!simulateConfig },
-  });
+  } = useSimulateContract(simulateConfig ?? undefined);
 
+  // wagmi v2の形式に修正
   const { writeContract, status, data: txData, error: writeError } =
     useWriteContract();
 
@@ -173,7 +173,7 @@ export function useZoraCreateCoin() {
 
     try {
       const gasOverrides = await getOptimizedGasParams(publicClient);
-      await writeContract({ ...simulateData.request, ...gasOverrides });
+      writeContract({ ...simulateData.request, ...gasOverrides });
     } catch (err) {
       console.error(err);
       setError(

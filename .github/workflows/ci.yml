@@ -45,8 +45,7 @@ jobs:
       
       - name: Install dependencies
         run: npm ci
-      - name: Link Vercel project
-        run: npx vercel link --token ${{ secrets.VERCEL_TOKEN }} --org-id ${{ secrets.VERCEL_ORG_ID }} --project-id ${{ secrets.VERCEL_PROJECT_ID }}   
+        
       #- name: Set environment file
       #  run: |
       #   if [ "${{ github.ref }}" = "refs/heads/main" ]; then

@@ -85,7 +85,7 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/coinspire-ai:${{ github.ref == 'refs/heads/main' && 'latest' || 'staging' }}
       
-      - name: Deploy to Render
+      - name: Deploy to Render (Verbose)
         run: |
           ENV_NAME="${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}"
-          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}?env=${ENV_NAME}"
+          curl -v --fail -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}?env=${ENV_NAME}"

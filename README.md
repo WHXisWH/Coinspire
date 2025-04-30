@@ -2,6 +2,9 @@
 
 Coinspire is a web application designed to empower creators to tokenize and share their original content as tradable digital assets using the Zora Coins SDK. It combines intuitive UI with powerful AI-driven features to help users launch their own social tokens seamlessly.
 
+## ⛸️ Demo URL
+https://nudefi-demo.vercel.app
+
 ## 🌟 Project Overview
 
 Coinspire combines AI-driven trend analysis with creator tools to help artists and content creators monetize their work through ZORA's Coins Protocol. The platform analyzes current trends across social media, news, and communities, then provides creators with inspiration and templates to create content that resonates with audiences.

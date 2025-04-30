@@ -84,7 +84,7 @@ def get_recommendation():
         style = request.args.get('style')
         count_str = request.args.get('count', '6')
 
-        keywords_list = [{"text": k.strip(), "value": 0} for k in keywords_str.split(',')] if keywords_str else None
+        keywords_list = [{"text": k.strip(), "value": 0} for k in keywords_str.split(',')] if keywords_str else []
         try:
             count = int(count_str)
         except ValueError:
@@ -96,11 +96,28 @@ def get_recommendation():
             count=count
         )
 
-        generated_prompts = generate_prompts(
-            templates=recommended_templates,
-            style=style,
-            keywords=keywords_list
-            ) if 'generate_prompts' in globals() else ["Prompt generation logic needed"]
+        styles_list = [{"name": style, "score": 1.0}] if style else []
+
+        theme_names_from_templates = set()
+        for t in recommended_templates:
+            if isinstance(t.get("tags"), list) and len(t["tags"]) > 0:
+                theme_names_from_templates.add(t["tags"][0])
+        themes_list = [{"name": th, "popularity": 0.8} for th in theme_names_from_templates]
+
+        generated_prompts = []
+        if 'generate_prompts' in globals():
+             if keywords_list or themes_list or styles_list:
+                generated_prompts = generate_prompts(
+                    keywords=keywords_list,
+                    themes=themes_list,
+                    styles=styles_list,
+                    count=count
+                )
+             else:
+                 generated_prompts = ["Input data (keywords/themes/styles) was empty."]
+        else:
+             generated_prompts = ["Prompt generation logic (generate_prompts) not found."]
+
 
         recommendations = {
             "templates": recommended_templates,
@@ -109,8 +126,8 @@ def get_recommendation():
         return jsonify(recommendations), 200
 
     except Exception as e:
-        app.logger.error(f"Error in /api/recommendation: {e}", exc_info=True)
-        return jsonify({"error": "Failed to get recommendations", "details": str(e)}), 500
+        app.logger.error(f"Error in /api/recommendation processing: {e}", exc_info=True)
+        return jsonify({"error": "Failed to process recommendations", "details": str(e)}), 500
 
 
 @app.route('/api/templates', methods=['GET'])

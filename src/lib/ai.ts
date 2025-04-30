@@ -2,7 +2,7 @@ import axios, { AxiosRequestConfig } from 'axios';
 import type { TrendAnalysis, Template } from '@/types/trends';
 
 // AIサービスURL
-const AI_SERVICE_URL = 
+const AI_SERVICE_URL =
   process.env.NEXT_PUBLIC_AI_SERVICE_URL || 'https://coinspire-ai.onrender.com';
 
 // AIサービスタイムアウト (ms)
@@ -30,12 +30,12 @@ aiClient.interceptors.response.use(
   error => {
     console.error('AI Service Error:', error.message || 'Unknown error');
     console.error('Error details:', error.response || error.request || error);
-    
+
     // CORSエラーの特殊処理
     if (error.message === 'Network Error') {
       console.warn('Possible CORS issue detected. Using fallback data.');
     }
-    
+
     return Promise.reject(error);
   }
 );
@@ -51,11 +51,11 @@ export async function fetchTrendsFromAI(): Promise<TrendAnalysis> {
       console.warn('AI Service URL is not defined. Using mock data.');
       return getMockTrendData();
     }
-    
+
     console.log('Fetching trends from AI service:', AI_SERVICE_URL);
-    const response = await aiClient.get('/trends');
+    const response = await aiClient.get('/api/trends');
     console.log('AI service response:', response.status);
-    
+
     return response.data;
   } catch (error) {
     console.error('Error fetching trends from AI service:', error);
@@ -69,25 +69,25 @@ export async function fetchTrendsFromAI(): Promise<TrendAnalysis> {
  * @param options パラメータオプション
  * @returns レコメンデーション結果
  */
-export async function fetchRecommendationsFromAI(options: { 
-  keywords?: string[]; 
+export async function fetchRecommendationsFromAI(options: {
+  keywords?: string[];
   style?: string;
   count?: number;
 }) {
   const params: Record<string, string> = {};
-  
+
   if (options.keywords && options.keywords.length > 0) {
     params.keywords = options.keywords.join(',');
   }
-  
+
   if (options.style) {
     params.style = options.style;
   }
-  
+
   if (options.count) {
     params.count = options.count.toString();
   }
-  
+
   try {
     // フォールバック動作の有効化
     if (ENABLE_MOCK_DATA) {
@@ -97,9 +97,9 @@ export async function fetchRecommendationsFromAI(options: {
         return getMockRecommendationData(options);
       }
     }
-    
+
     console.log('Fetching recommendations from AI service with params:', params);
-    const response = await aiClient.get('/recommendation', { params });
+    const response = await aiClient.get('/api/recommendation', { params });
     return response.data;
   } catch (error) {
     console.error('Error fetching recommendations from AI service:', error);
@@ -118,7 +118,7 @@ export async function fetchTemplatesFromAI(options: {
 } = {}): Promise<Template[]> {
   try {
     console.log('Fetching templates from AI service with options:', options);
-    const response = await aiClient.get('/templates', { params: options });
+    const response = await aiClient.get('/api/templates', { params: options });
     return response.data || [];
   } catch (error) {
     console.error('Error fetching templates from AI service:', error);
@@ -172,17 +172,17 @@ function getMockTrendData(): TrendAnalysis {
  * @param options パラメータオプション
  * @returns モックレコメンデーションデータ
  */
-function getMockRecommendationData(options: { 
-  keywords?: string[]; 
+function getMockRecommendationData(options: {
+  keywords?: string[];
   style?: string;
   count?: number;
 }) {
   const style = options.style || 'ピクセルアート';
   const keywordsText = options.keywords?.join(', ') || 'NFT, Web3, クリプトアート';
-  
+
   return {
-    templates: getMockTemplates({ 
-      keywords: options.keywords, 
+    templates: getMockTemplates({
+      keywords: options.keywords,
       count: options.count
     }),
     prompts: [
@@ -203,7 +203,7 @@ function getMockTemplates(options: {
 } = {}): Template[] {
   const count = options.count || 5;
   const keywordsText = options.keywords?.join(', ') || 'NFT, Web3, クリプトアート';
-  
+
   const templates: Template[] = [
     {
       id: 'template-cyber-1',
@@ -254,6 +254,6 @@ function getMockTemplates(options: {
       aiPrompt: `ピクセルアート、${keywordsText}、ドット絵、8ビットスタイル、レトロゲーム`
     }
   ];
-  
+
   return templates.slice(0, Math.min(count, templates.length));
 }

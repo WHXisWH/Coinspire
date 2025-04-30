@@ -2,6 +2,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 import os
 import json
+import nltk
 from analyze.text import analyze_text_trends
 from analyze.image import analyze_image_trends
 from suggest.template import generate_templates
@@ -9,65 +10,56 @@ from suggest.prompt import generate_prompts
 
 app = Flask(__name__)
 
-# CORS設定を環境に応じて変更
 allowed_origins = os.environ.get('ALLOWED_ORIGINS', 'https://coinspire.vercel.app')
 origins = allowed_origins.split(',')
-
 CORS(app, resources={r"/api/*": {"origins": origins}})
 
-# APIキー認証ミドルウェア
 API_KEY = os.environ.get('AI_SERVICE_API_KEY')
+
+try:
+    nltk_data_path = os.path.join(os.environ.get('RENDER_PROJECT_ROOT', '.'), 'nltk_data')
+    if not os.path.exists(nltk_data_path):
+        os.makedirs(nltk_data_path)
+    nltk.data.path.append(nltk_data_path)
+    nltk.download('punkt', download_dir=nltk_data_path, quiet=True, raise_on_error=True)
+    nltk.download('stopwords', download_dir=nltk_data_path, quiet=True, raise_on_error=True)
+except Exception as e:
+    print(f"NLTK data download error: {e}")
+
 
 def require_api_key(f):
     def decorated_function(*args, **kwargs):
-        # APIキーが設定されていない場合は認証をスキップ（開発環境用）
         if not API_KEY:
             return f(*args, **kwargs)
-            
-        # リクエストからAPIキーを取得して検証
+
         request_key = request.headers.get('X-API-Key')
         if request_key and request_key == API_KEY:
             return f(*args, **kwargs)
         else:
             return jsonify({"error": "Invalid API key"}), 401
-            
+
     decorated_function.__name__ = f.__name__
     return decorated_function
 
-# ヘルスチェックエンドポイント
 @app.route('/health', methods=['GET'])
 def health_check():
     return jsonify({"status": "healthy", "message": "AI service is running"})
 
-# トレンド分析エンドポイント
 @app.route('/api/trends', methods=['GET'])
 @require_api_key
 def get_trends():
-    # 実際の実装では、外部データソースからのデータ取得や
-    # 機械学習モデルを使用した分析を行うべきですが、
-    # ここではモックデータを返します
-    
-    # モックデータ（実際はDBや分析エンジンから取得）
     trends = {
         "keywords": [
-            {"text": "NFT", "value": 30},
-            {"text": "Web3", "value": 25},
-            {"text": "ZORA", "value": 22},
-            {"text": "仮想通貨", "value": 20},
-            {"text": "ミーム", "value": 18},
-            {"text": "AI生成", "value": 15},
-            {"text": "クリプトアート", "value": 12},
-            {"text": "メタバース", "value": 10},
-            {"text": "ジェネラティブ", "value": 9},
-            {"text": "コレクション", "value": 8},
-            {"text": "PFP", "value": 7},
-            {"text": "コミュニティ", "value": 6},
+            {"text": "NFT", "value": 30}, {"text": "Web3", "value": 25},
+            {"text": "ZORA", "value": 22}, {"text": "仮想通貨", "value": 20},
+            {"text": "ミーム", "value": 18}, {"text": "AI生成", "value": 15},
+            {"text": "クリプトアート", "value": 12}, {"text": "メタバース", "value": 10},
+            {"text": "ジェネラティブ", "value": 9}, {"text": "コレクション", "value": 8},
+            {"text": "PFP", "value": 7}, {"text": "コミュニティ", "value": 6},
         ],
         "themes": [
-            {"name": "サイバーパンク", "popularity": 0.8},
-            {"name": "レトロ風アート", "popularity": 0.75},
-            {"name": "日本のアニメスタイル", "popularity": 0.7},
-            {"name": "ミニマリスト", "popularity": 0.65},
+            {"name": "サイバーパンク", "popularity": 0.8}, {"name": "レトロ風アート", "popularity": 0.75},
+            {"name": "日本のアニメスタイル", "popularity": 0.7}, {"name": "ミニマリスト", "popularity": 0.65},
             {"name": "抽象的なデジタルアート", "popularity": 0.6},
         ],
         "colorPalettes": [
@@ -76,92 +68,66 @@ def get_trends():
             {"name": "レトロ", "colors": ["#F4A460", "#4682B4", "#B22222", "#DAA520"]},
         ],
         "visualStyles": [
-            {"name": "ピクセルアート", "examples": ["https://example.com/pixel1.jpg"]},
-            {"name": "グリッチアート", "examples": ["https://example.com/glitch1.jpg"]},
-            {"name": "3Dレンダリング", "examples": ["https://example.com/3d1.jpg"]},
-            {"name": "手描き風", "examples": ["https://example.com/hand1.jpg"]},
-            {"name": "平面デザイン", "examples": ["https://example.com/flat1.jpg"]},
+            {"name": "ピクセルアート", "examples": [""]}, {"name": "グリッチアート", "examples": [""]},
+            {"name": "3Dレンダリング", "examples": [""]}, {"name": "手描き風", "examples": [""]},
+            {"name": "平面デザイン", "examples": [""]},
         ],
         "updatedAt": "2025-03-31T12:00:00Z"
     }
-    
     return jsonify(trends)
 
-# レコメンデーションエンドポイント
 @app.route('/api/recommendation', methods=['GET'])
 @require_api_key
 def get_recommendation():
-    # クエリパラメータから条件を取得
-    keywords = request.args.get('keywords', '').split(',') if request.args.get('keywords') else []
-    style = request.args.get('style')
-    
-    # キーワードと選択されたスタイルに基づいて、
-    # テンプレートやプロンプト案を生成
-    # 実際の実装では機械学習モデルやルールベースの推論を使用
-    
-    # シンプルなモックレスポンス
-    recommendations = {
-        "templates": [
-            {
-                "id": "template-cyber-1",
-                "name": f"{style or '未来的'} デザイン",
-                "description": "鮮やかな色彩とテック感あふれるデザイン",
-                "imageUrl": "/templates/cyber-1.png",
-                "tags": ["サイバー", "未来的", "テック"],
-                "aiPrompt": f"サイバーパンクな世界、{', '.join(keywords[:3]) if keywords else 'ネオンの光、未来都市'}"
-            },
-            {
-                "id": "template-abstract-1",
-                "name": f"{style or '抽象的'} アート",
-                "description": "幾何学的な形状と複雑なパターンを用いた抽象的なデザイン",
-                "imageUrl": "/templates/abstract-1.png",
-                "tags": ["抽象", "パターン", "カラフル"],
-                "aiPrompt": f"抽象的なデジタルアート、{', '.join(keywords[:3]) if keywords else '幾何学模様、波状のパターン'}"
-            }
-        ],
-        "prompts": [
-            f"サイバーパンクな都市風景、ネオンの光、{', '.join(keywords[:3]) if keywords else '高層ビル、未来的'}",
-            f"抽象的な{style or 'デジタル'}アート、鮮やかな色彩、{', '.join(keywords[:3]) if keywords else '流動的なフォルム'}"
-        ]
-    }
-    
-    return jsonify(recommendations)
+    try:
+        keywords_str = request.args.get('keywords')
+        style = request.args.get('style')
+        count_str = request.args.get('count', '6')
+
+        keywords_list = [{"text": k.strip(), "value": 0} for k in keywords_str.split(',')] if keywords_str else None
+        try:
+            count = int(count_str)
+        except ValueError:
+            count = 6
+
+        recommended_templates = generate_templates(
+            keywords=keywords_list,
+            style=style,
+            count=count
+        )
+
+        generated_prompts = generate_prompts(
+            templates=recommended_templates,
+            style=style,
+            keywords=keywords_list
+            ) if 'generate_prompts' in globals() else ["Prompt generation logic needed"]
+
+        recommendations = {
+            "templates": recommended_templates,
+            "prompts": generated_prompts
+        }
+        return jsonify(recommendations), 200
+
+    except Exception as e:
+        app.logger.error(f"Error in /api/recommendation: {e}", exc_info=True)
+        return jsonify({"error": "Failed to get recommendations", "details": str(e)}), 500
+
 
 @app.route('/api/templates', methods=['GET'])
 @require_api_key
 def get_templates():
-    # クエリパラメータまたはデフォルトモックを使って生成
-    keywords = [
-        {"text": "NFT", "value": 30},
-        {"text": "メタバース", "value": 25},
-        {"text": "デジタルアート", "value": 20},
-        {"text": "ブロックチェーン", "value": 15}
-    ]
-    
-    themes = [
-        {"name": "サイバーパンク", "popularity": 0.8},
-        {"name": "ファンタジー", "popularity": 0.7},
-        {"name": "未来都市", "popularity": 0.6}
-    ]
-    
-    styles = [
-        {"name": "ピクセルアート", "score": 0.9},
-        {"name": "3Dレンダリング", "score": 0.8},
-        {"name": "アニメ風", "score": 0.7}
-    ]
-    
-    palettes = [
-        {"name": "ネオン", "colors": ["#FF00FF", "#00FFFF", "#FFFF00", "#FF00AA"]},
-        {"name": "パステル", "colors": ["#FFD1DC", "#FFECF1", "#A2D2FF", "#EFD3FF"]}
-    ]
-    
+    keywords = [ {"text": "NFT", "value": 30}, {"text": "メタバース", "value": 25}, {"text": "デジタルアート", "value": 20}, {"text": "ブロックチェーン", "value": 15} ]
+    themes = [ {"name": "サイバーパンク", "popularity": 0.8}, {"name": "ファンタジー", "popularity": 0.7}, {"name": "未来都市", "popularity": 0.6} ]
+    styles = [ {"name": "ピクセルアート", "score": 0.9}, {"name": "3Dレンダリング", "score": 0.8}, {"name": "アニメ風", "score": 0.7} ]
+    palettes = [ {"name": "ネオン", "colors": ["#FF00FF", "#00FFFF", "#FFFF00", "#FF00AA"]}, {"name": "パステル", "colors": ["#FFD1DC", "#FFECF1", "#A2D2FF", "#EFD3FF"]} ]
     templates = generate_templates(keywords, themes, styles, palettes, count=5)
     return jsonify(templates)
 
 @app.route('/')
 def index():
     return jsonify({"message": "Welcome to Coinspire API. Use /api/* endpoints."})
-    
+
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 10000))
-    app.run(debug=True, host='0.0.0.0', port=port)
+    debug_mode = os.environ.get('FLASK_DEBUG', '0') == '1'
+    app.run(host='0.0.0.0', port=port, debug=debug_mode)

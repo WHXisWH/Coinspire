@@ -1,18 +1,14 @@
 import axios from 'axios';
 import type { TrendAnalysis, Template } from '@/types/trends';
 
-// API呼び出しタイムアウト (ms) 
 const API_CALL_TIMEOUT = parseInt(process.env.NEXT_PUBLIC_API_CALL_TIMEOUT || '30000', 10);
 
-// モック機能フラグ
 const ENABLE_MOCK_DATA = process.env.NEXT_PUBLIC_ENABLE_MOCK_DATA !== 'false';
 
-// Next.js APIルート呼び出し用 Axios インスタンス
 const apiClient = axios.create({
   timeout: API_CALL_TIMEOUT,
   headers: {
     'Content-Type': 'application/json',
-
   }
 });
 
@@ -21,16 +17,10 @@ apiClient.interceptors.response.use(
   error => {
     console.error('API Call Error:', error.message || 'Unknown error');
     console.error('Error details:', error.response || error.request || error);
-
     return Promise.reject(error);
   }
 );
 
-/**
- * レコメンデーションを取得 (APIルート経由)
- * @param options パラメータオプション
- * @returns レコメンデーション結果
- */
 export async function fetchRecommendationsFromAI(options: {
   keywords?: string[];
   style?: string;
@@ -49,44 +39,22 @@ export async function fetchRecommendationsFromAI(options: {
   }
 
   try {
-    // フォールバック動作
-    if (ENABLE_MOCK_DATA) {
-      // 確率でモックデータを返す (テスト用)
-      if (Math.random() < 0.5) {
-        console.log('Using mock data for testing (fetchRecommendationsFromAI)');
-        return getMockRecommendationData(options);
-      }
-    }
-
     console.log('Fetching recommendations via API route with params:', params);
-    // 呼び出し先をNext.js APIルートに変更
     const response = await apiClient.get('/api/proxy/recommendation', { params });
-    return response.data;
+    return response.data || { templates: [], prompts: [] };
+
   } catch (error) {
     console.error('Error fetching recommendations via API route:', error);
-    // エラー時はモックデータを返す
     console.log('Using mock data as fallback due to API route error (fetchRecommendationsFromAI)');
     return getMockRecommendationData(options);
   }
 }
 
-/**
- * トレンド分析データを取得
- * @returns トレンド分析結果
- */
 export async function fetchTrendsFromAI(): Promise<TrendAnalysis> {
 
   try {
-     // フォールバック動作
-     if (ENABLE_MOCK_DATA) {
-      if (Math.random() < 0.5) {
-        console.log('Using mock data for testing (fetchTrendsFromAI)');
-        return getMockTrendData();
-      }
-    }
     console.warn('fetchTrendsFromAI needs to be updated to use API route proxy.');
-    // return response.data;
-    throw new Error('API route for trends not implemented yet'); // 実装されるまでエラーにするか、モックを返す
+    throw new Error('API route for trends not implemented yet');
   } catch(error) {
     console.error('Error fetching trends:', error);
     console.log('Using mock data as fallback (fetchTrendsFromAI)');
@@ -94,10 +62,6 @@ export async function fetchTrendsFromAI(): Promise<TrendAnalysis> {
   }
 }
 
-/**
- * テンプレートを取得 
- * @returns テンプレート配列
- */
 export async function fetchTemplatesFromAI(options: {
   keywords?: string[];
   themes?: string[];
@@ -105,15 +69,7 @@ export async function fetchTemplatesFromAI(options: {
 } = {}): Promise<Template[]> {
 
   try {
-     // フォールバック動作
-     if (ENABLE_MOCK_DATA) {
-      if (Math.random() < 0.5) {
-        console.log('Using mock data for testing (fetchTemplatesFromAI)');
-        return getMockTemplates(options);
-      }
-    }
     console.warn('fetchTemplatesFromAI needs to be updated to use API route proxy.');
-
      throw new Error('API route for templates not implemented yet');
   } catch (error) {
     console.error('Error fetching templates:', error);
@@ -122,8 +78,6 @@ export async function fetchTemplatesFromAI(options: {
   }
 }
 
-
-// --- モックデータ関数  ---
 function getMockTrendData(): TrendAnalysis {
   return {
     keywords: [ { text: 'NFT', value: 30 }, { text: 'Web3', value: 25 }, { text: 'ZORA', value: 22 }, { text: '仮想通貨', value: 20 }, { text: 'ミーム', value: 18 }, { text: 'AI生成', value: 15 }, { text: 'クリプトアート', value: 12 }, { text: 'メタバース', value: 10 }, { text: 'ジェネラティブ', value: 9 }, { text: 'コレクション', value: 8 }, ],

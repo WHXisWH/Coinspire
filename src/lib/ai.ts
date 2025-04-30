@@ -3,7 +3,7 @@ import type { TrendAnalysis, Template } from '@/types/trends';
 
 // AIサービスURL
 const AI_SERVICE_URL = 
-  process.env.NEXT_PUBLIC_AI_SERVICE_URL || 'https://coinspire.onrender.com/api';
+  process.env.NEXT_PUBLIC_AI_SERVICE_URL || 'https://coinspire-ai.onrender.com';
 
 // AIサービスタイムアウト (ms)
 const AI_SERVICE_TIMEOUT = parseInt(process.env.AI_SERVICE_TIMEOUT || '30000', 10);

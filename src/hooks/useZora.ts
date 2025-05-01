@@ -253,8 +253,10 @@ const swrOptions = {
 };
 
 export function useTrendingCoins(count = 10) {
+  const chainId = process.env.NEXT_PUBLIC_NETWORK_ENVIRONMENT === 'testnet' ? 84532 : 8453;
+  
   const { data, error, isLoading, mutate } = useSWR(
-    `/api/coins/trending?count=${count}`,
+    `/api/coins/trending?count=${count}&chainId=${chainId}`,
     makeFetcher('トレンドコイン取得失敗'),
     swrOptions
   );
@@ -262,8 +264,10 @@ export function useTrendingCoins(count = 10) {
 }
 
 export function useNewCoins(count = 10) {
+  const chainId = process.env.NEXT_PUBLIC_NETWORK_ENVIRONMENT === 'testnet' ? 84532 : 8453;
+  
   const { data, error, isLoading, mutate } = useSWR(
-    `/api/coins/new?count=${count}`,
+    `/api/coins/new?count=${count}&chainId=${chainId}`,
     makeFetcher('新着コイン取得失敗'),
     swrOptions
   );

@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     // SDKを使用して人気上昇中のコインを取得
     const response = await getCoinsTopGainers({
       count: count,
-      chainId: chainId
+      chainId: [chainId]
     });
     
     // SDKからのレスポンスを整形
@@ -43,6 +43,41 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ coins });
   } catch (error) {
     console.error('Error fetching trending coins:', error);
+    
+    // フォールバック用のモックデータ（開発環境のみ）
+    if (process.env.NODE_ENV === 'development') {
+      const mockCoins: CoinDetails[] = [
+        {
+          id: '1',
+          name: 'Example Coin 1',
+          description: 'This is an example trending coin',
+          address: '0x1234567890123456789012345678901234567890',
+          symbol: 'EXC1',
+          createdAt: new Date().toISOString(),
+          creatorAddress: '0x0987654321098765432109876543210987654321',
+          marketCap: '10000',
+          volume24h: '5000',
+          mediaUrl: 'ipfs://example-media-cid',
+          imageUrl: 'ipfs://example-image-cid',
+        },
+        {
+          id: '2',
+          name: 'Example Coin 2',
+          description: 'Another example coin with rising popularity',
+          address: '0x2345678901234567890123456789012345678901',
+          symbol: 'EXC2',
+          createdAt: new Date().toISOString(),
+          creatorAddress: '0x0987654321098765432109876543210987654321',
+          marketCap: '8000',
+          volume24h: '3000',
+          mediaUrl: 'ipfs://example-media-cid-2',
+          imageUrl: 'ipfs://example-image-cid-2',
+        }
+      ];
+      return NextResponse.json({ coins: mockCoins });
+    }
+    
+    // 本番環境では空配列を返す
     return NextResponse.json({ coins: [] });
   }
 }

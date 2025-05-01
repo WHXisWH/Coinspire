@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     const response = await getProfileBalances({
       identifier: address,
       count: 50, // 取得する残高の数
-      chainId: chainId
+      chainId: [chainId]
     });
     
     // SDKからのレスポンスを整形
@@ -73,6 +73,31 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ coins });
   } catch (error) {
     console.error('Error fetching user coins:', error);
+    
+    // フォールバック用のモックデータ（開発環境のみ）
+    if (process.env.NODE_ENV === 'development') {
+      const mockCoins: CoinDetails[] = [
+        {
+          id: '5',
+          name: 'User Coin 1',
+          description: 'A coin owned by the user',
+          address: '0x5678901234567890123456789012345678901234',
+          symbol: 'USER1',
+          createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 1週間前
+          creatorAddress: '0x1234567890123456789012345678901234567890',
+          marketCap: '2000',
+          volume24h: '400',
+          mediaUrl: 'ipfs://user-media-cid-1',
+          imageUrl: 'ipfs://user-image-cid-1',
+          balance: 100,
+          balanceRaw: '100000000000000000000',
+          valueUsd: '500'
+        }
+      ];
+      return NextResponse.json({ coins: mockCoins });
+    }
+    
+    // 本番環境では空配列を返す
     return NextResponse.json({ coins: [] });
   }
 }

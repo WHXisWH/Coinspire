@@ -5,13 +5,11 @@ import type { CoinDetails } from '@/types/zora';
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const count = parseInt(searchParams.get('count') || '10');
-  const chainId = parseInt(searchParams.get('chainId') || '84532'); // Base Sepolia fallback
 
   try {
     // SDKを使用して最新のコインを取得
     const response = await getCoinsNew({
       count: count,
-      chainIds: [chainId],
     });
 
     // SDKからのレスポンスを整形

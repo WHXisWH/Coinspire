@@ -1,7 +1,7 @@
 from typing import List, Dict, Any, Optional
 import json
+import random
 
-# 事前定義されたテンプレート
 PREDEFINED_TEMPLATES = [
     {
         "id": "template-cyber-1",
@@ -16,7 +16,7 @@ PREDEFINED_TEMPLATES = [
         "name": "抽象的 アート",
         "description": "幾何学的な形状と複雑なパターンを用いた抽象的なデザイン",
         "imageUrl": "/images/templates/abstract-1.png",
-        "tags": ["抽象", "パターン", "カラフル"],
+        "tags": ["抽象的なデジタルアート", "パターン", "カラフル"],
         "aiPrompt": "抽象的なデジタルアート、キーワード、幾何学模様、波状のパターン"
     },
     {
@@ -24,7 +24,7 @@ PREDEFINED_TEMPLATES = [
         "name": "アニメ風 イラスト",
         "description": "日本のアニメスタイルを取り入れたカラフルなイラスト",
         "imageUrl": "/images/templates/anime-1.png",
-        "tags": ["アニメ", "イラスト", "カラフル"],
+        "tags": ["日本のアニメスタイル", "イラスト", "カラフル"],
         "aiPrompt": "アニメスタイルのイラスト、キーワード、鮮やかな色彩、2Dスタイル"
     },
     {
@@ -32,7 +32,7 @@ PREDEFINED_TEMPLATES = [
         "name": "ミニマル デザイン",
         "description": "シンプルで洗練されたミニマルデザイン",
         "imageUrl": "/images/templates/minimal-1.png",
-        "tags": ["ミニマル", "シンプル", "洗練"],
+        "tags": ["ミニマリスト", "シンプル", "洗練"],
         "aiPrompt": "ミニマルなデザイン、キーワード、シンプル、余白、少ない色"
     },
     {
@@ -40,7 +40,7 @@ PREDEFINED_TEMPLATES = [
         "name": "レトロ スタイル",
         "description": "80年代や90年代を思わせるレトロなデザイン",
         "imageUrl": "/images/templates/retro-1.png",
-        "tags": ["レトロ", "ビンテージ", "ノスタルジック"],
+        "tags": ["レトロ風アート", "ビンテージ", "ノスタルジック"],
         "aiPrompt": "レトロスタイル、キーワード、80年代、ビンテージ感、ノスタルジック"
     },
     {
@@ -50,6 +50,38 @@ PREDEFINED_TEMPLATES = [
         "imageUrl": "/images/templates/pixel-1.png",
         "tags": ["ピクセルアート", "レトロゲーム", "8ビット"],
         "aiPrompt": "ピクセルアート、キーワード、ドット絵、8ビットスタイル、レトロゲーム"
+    },
+    {
+        "id": "template-glitch-1",
+        "name": "グリッチアート スタイル",
+        "description": "デジタルなノイズや歪みを表現したアート",
+        "imageUrl": "/images/templates/glitch-1.png",
+        "tags": ["グリッチアート", "デジタルノイズ", "抽象"],
+        "aiPrompt": "グリッチアートスタイル、キーワード、データモッシュ、カラフルなノイズ"
+    },
+     {
+        "id": "template-3d-1",
+        "name": "3Dレンダリング スタイル",
+        "description": "リアルまたは様式化された3Dレンダリング",
+        "imageUrl": "/images/templates/3d-1.png",
+        "tags": ["3Dレンダリング", "CG", "リアル"],
+        "aiPrompt": "3Dレンダリング、キーワード、詳細な質感、フォトリアル"
+    },
+     {
+        "id": "template-hand-1",
+        "name": "手描き風 スタイル",
+        "description": "温かみのある手描き風のイラストレーション",
+        "imageUrl": "/images/templates/hand-1.png",
+        "tags": ["手描き風", "イラスト", "スケッチ"],
+        "aiPrompt": "手描き風イラスト、キーワード、インク、水彩、スケッチ"
+    },
+     {
+        "id": "template-flat-1",
+        "name": "平面デザイン スタイル",
+        "description": "フラットでシンプルなグラフィックスタイル",
+        "imageUrl": "/images/templates/flat-1.png",
+        "tags": ["平面デザイン", "フラットデザイン", "シンプル"],
+        "aiPrompt": "平面デザイン、キーワード、ベクターアート、シンプルな形状、フラットカラー"
     }
 ]
 
@@ -61,21 +93,15 @@ def generate_templates(
     style: Optional[str] = None,
     count: int = 6
 ) -> List[Dict[str, Any]]:
-    """
-    テンプレート一覧を返す。style によるフィルタリングと、キーワードの埋め込みが可能。
-    """
 
-    # style に一致するタグを持つテンプレートだけを対象にする
     if style:
-        filtered = [t for t in PREDEFINED_TEMPLATES if style in t["tags"]]
-        target_templates = filtered if filtered else PREDEFINED_TEMPLATES
+        filtered = [t for t in PREDEFINED_TEMPLATES if style in t.get("tags", [])]
+        target_templates = filtered
     else:
         target_templates = PREDEFINED_TEMPLATES
 
-    # キーワード挿入用テキスト
     selected_keywords_text = ", ".join([k["text"] for k in keywords[:3]]) if keywords else "トレンドキーワード"
 
-    # aiPrompt の「キーワード」を実キーワードに置換
     final_templates = []
     for template in target_templates:
         new_template = template.copy()
@@ -85,8 +111,6 @@ def generate_templates(
 
     return final_templates[:min(count, len(final_templates))]
 
-
-# --- テスト実行用コード ---
 if __name__ == "__main__":
     test_keywords = [
         {"text": "NFT", "value": 30},
@@ -97,6 +121,10 @@ if __name__ == "__main__":
     print("--- 'サイバーパンク' Filter Results ---")
     cyber = generate_templates(keywords=test_keywords, style="サイバーパンク", count=3)
     print(json.dumps(cyber, ensure_ascii=False, indent=2))
+
+    print("\n--- 'レトロ風アート' Filter Results ---")
+    retro = generate_templates(keywords=test_keywords, style="レトロ風アート", count=3)
+    print(json.dumps(retro, ensure_ascii=False, indent=2))
 
     print("\n--- No Style Filter Results ---")
     all_templates = generate_templates(keywords=test_keywords, count=5)

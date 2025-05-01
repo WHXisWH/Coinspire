@@ -5,22 +5,20 @@ import type { CoinDetails } from '@/types/zora';
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const count = parseInt(searchParams.get('count') || '10');
-  const chainId = parseInt(searchParams.get('chainId') || '84532'); // Base Sepolia
-  
+
   try {
     // SDKを使用して人気上昇中のコインを取得
     const response = await getCoinsTopGainers({
       count: count,
-      chainId: [chainId]
     });
-    
+
     // SDKからのレスポンスを整形
     const coins: CoinDetails[] = [];
-    
+
     if (response?.data?.exploreList?.edges) {
       response.data.exploreList.edges.forEach((edge: any) => {
         if (!edge || !edge.node) return;
-        
+
         const node = edge.node;
         coins.push({
           id: node.id || '',
@@ -39,11 +37,11 @@ export async function GET(request: NextRequest) {
         });
       });
     }
-    
+
     return NextResponse.json({ coins });
   } catch (error) {
     console.error('Error fetching trending coins:', error);
-    
+
     // フォールバック用のモックデータ（開発環境のみ）
     if (process.env.NODE_ENV === 'development') {
       const mockCoins: CoinDetails[] = [
@@ -76,7 +74,7 @@ export async function GET(request: NextRequest) {
       ];
       return NextResponse.json({ coins: mockCoins });
     }
-    
+
     // 本番環境では空配列を返す
     return NextResponse.json({ coins: [] });
   }

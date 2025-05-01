@@ -6,50 +6,48 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const address = searchParams.get('address');
   const chainId = parseInt(searchParams.get('chainId') || '84532'); // Base Sepolia
-  
+
   if (!address) {
     return NextResponse.json(
       { error: 'Address parameter is required' },
       { status: 400 }
     );
   }
-  
+
   try {
     // SDKを使用してユーザーのコイン残高を取得
     const response = await getProfileBalances({
       identifier: address,
       count: 50, // 取得する残高の数
-      chainId: [chainId]
+      chainIds: [chainId]
     });
-    
+
     // SDKからのレスポンスを整形
     const profileData = response?.data?.profile;
-    
-    // 正しいレスポンス構造に対応する処理
+
     const coins: CoinDetails[] = [];
-    
-    // 型安全な方法でプロパティの存在を確認
-    if (profileData && 
-        typeof profileData === 'object' && 
+
+    if (profileData &&
+        typeof profileData === 'object' &&
         profileData !== null) {
-      
+
       // 明示的な型アサーションを使用
-      const typedProfileData = profileData as { 
-        coinBalances?: { 
-          edges?: Array<{ 
-            node?: any 
-          }> 
-        } 
+      const typedProfileData = profileData as {
+        coinBalances?: {
+          edges?: Array<{
+            node?: any
+          }>
+        }
       };
-      
+
       const edges = typedProfileData.coinBalances?.edges || [];
-      
+
       edges.forEach((edge) => {
         if (!edge || !edge.node) return;
-        
+
         const node = edge.node;
         const token = node.token || {};
-        
+
         coins.push({
           id: token.id || '',
           name: token.name || '',
@@ -69,11 +67,11 @@ export async function GET(request: NextRequest) {
         });
       });
     }
-    
+
     return NextResponse.json({ coins });
   } catch (error) {
     console.error('Error fetching user coins:', error);
-    
+
     // フォールバック用のモックデータ（開発環境のみ）
     if (process.env.NODE_ENV === 'development') {
       const mockCoins: CoinDetails[] = [
@@ -96,7 +94,7 @@ export async function GET(request: NextRequest) {
       ];
       return NextResponse.json({ coins: mockCoins });
     }
-    
+
     // 本番環境では空配列を返す
     return NextResponse.json({ coins: [] });
   }

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import axios from 'axios';
 
 const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'https://coinspire-ai.onrender.com';
-const AI_SERVICE_API_KEY = process.env.AI_SERVICE_API_KEY;
+const AI_SERVICE_API_KEY = process.env.RECOMMENDER_API_KEY;
 const AI_SERVICE_TIMEOUT = parseInt(process.env.AI_SERVICE_TIMEOUT || '30000', 10);
 
 export async function GET(request: NextRequest) {

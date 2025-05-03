@@ -35,7 +35,7 @@ The application follows a modern frontend-centric architecture with separate AI 
 
 ```
 ┌────────────────────────────────────────────────────────────────┐
-│                      Frontend (Next.js)                         │
+│                      Frontend (Next.js)                        │
 │  ┌──────────────┐   ┌──────────────┐   ┌───────────────────┐   │
 │  │    Pages     │   │  Components  │   │      Hooks        │   │
 │  └──────────────┘   └──────────────┘   └───────────────────┘   │
